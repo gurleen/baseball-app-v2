@@ -31,6 +31,10 @@ export interface SequencePitch {
 	type?: string;
 	velocity?: number;
 	spin?: number;
+	/** Horizontal break, inches. */
+	hb?: number;
+	/** Induced vertical break, inches. */
+	ivb?: number;
 	result?: string;
 	kind?: "ball" | "strike" | "foul" | "inplay";
 	count?: string;
@@ -88,6 +92,8 @@ export function toSequencePitches(pitches: Pitch[]): SequencePitch[] {
 		type: pitch.type?.code,
 		velocity: pitch.velocity?.start,
 		spin: pitch.spinRate ?? undefined,
+		hb: pitch.break?.horizontal,
+		ivb: pitch.break?.inducedVertical,
 		result: (pitch.call.name || pitch.description).toUpperCase(),
 		kind: pitch.call.kind === "hbp" ? "ball" : pitch.call.kind,
 		count: `${pitch.countBefore.balls}-${pitch.countBefore.strikes}`,

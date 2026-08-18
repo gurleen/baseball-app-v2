@@ -75,6 +75,7 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
               pitches={hover.sequencePitches}
               {...bounds}
               showSpin
+              showBreak
               showLocation={false}
               focused={hover.sequenceFocused}
               onFocus={hover.onSequenceFocus}

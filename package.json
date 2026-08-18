@@ -16,7 +16,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@hydra-tv/sports": "^0.3.2",
+    "@hydra-tv/sports": "^0.3.3",
     "@hydra-tv/tokens": "^0.3.0",
     "@hydra-tv/ui": "^0.3.2",
     "@orpc/client": "^1.15.0",

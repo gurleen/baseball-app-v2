@@ -108,6 +108,7 @@ export function PlayCard({
               pitches={hover.sequencePitches}
               {...bounds}
               showSpin
+              showBreak
               showLocation={false}
               dense
               focused={hover.sequenceFocused}

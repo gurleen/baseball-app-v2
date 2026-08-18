@@ -94,6 +94,15 @@ describe("PitchSequence projection", () => {
 		expect(rows.some(row => typeof row.x === "number")).toBe(true);
 	});
 
+	test("carries horizontal and induced vertical break in inches", () => {
+		const withBreak = allPitches.find(pitch => pitch.break !== null);
+		expect(withBreak).toBeDefined();
+
+		const [row] = toSequencePitches([withBreak!]);
+		expect(row!.hb).toBe(withBreak!.break!.horizontal);
+		expect(row!.ivb).toBe(withBreak!.break!.inducedVertical);
+	});
+
 	test("maps kinds to the four the component colors", () => {
 		const allowed = new Set(["ball", "strike", "foul", "inplay"]);
 		for (const play of snapshot.plays) {
