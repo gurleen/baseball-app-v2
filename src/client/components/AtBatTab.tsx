@@ -2,7 +2,8 @@ import { Panel } from "@hydra-tv/ui"
 import { PitchSequence } from "@hydra-tv/sports"
 
 import type { GameSnapshot, LivePlay, PlaySummary } from "../../shared/models.ts"
-import { currentLineup, displayedPlay, formatZoneBounds, offenseSide, toSequencePitches, toStrikeZonePitches, zoneBounds } from "../game/adapters.ts"
+import { currentLineup, displayedPlay, formatZoneBounds, offenseSide, zoneBounds } from "../game/adapters.ts"
+import { usePitchHover } from "../game/usePitchHover.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted, numeric, table, td, th } from "../lib/table.ts"
 import { hitFromPitches, PlayCard, playBadge } from "./PlayCard.tsx"
@@ -11,6 +12,7 @@ import { LabeledStrikeZonePlot } from "./StrikeZone.tsx"
 
 export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
   const play = displayedPlay(snapshot)
+  const hover = usePitchHover(play?.pitches ?? [])
 
   if (!play) {
     return (
@@ -40,7 +42,14 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
         bodyStyle={{ padding: "var(--sp-3)" }}
       >
         {pitches.length > 0 ? (
-          <LabeledStrikeZonePlot pitches={toStrikeZonePitches(pitches)} {...bounds} colorBy="result" width="100%" />
+          <LabeledStrikeZonePlot
+            pitches={hover.zonePitches}
+            {...bounds}
+            colorBy="result"
+            width="100%"
+            focused={hover.zoneFocused}
+            onFocus={hover.onZoneFocus}
+          />
         ) : (
           <div style={muted}>Waiting for the first pitch of this at-bat.</div>
         )}
@@ -61,7 +70,14 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
         ) : null}
         {pitches.length > 0 ? (
           <div style={scrollX}>
-            <PitchSequence pitches={toSequencePitches(pitches)} {...bounds} showSpin showLocation={false} />
+            <PitchSequence
+              pitches={hover.sequencePitches}
+              {...bounds}
+              showSpin
+              showLocation={false}
+              focused={hover.sequenceFocused}
+              onFocus={hover.onSequenceFocus}
+            />
           </div>
         ) : (
           <div style={{ ...muted, padding: "var(--sp-3)" }}>No pitches yet.</div>

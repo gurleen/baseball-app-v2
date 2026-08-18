@@ -3,7 +3,8 @@ import { Badge } from "@hydra-tv/ui"
 import { PitchSequence } from "@hydra-tv/sports"
 
 import type { Pitch, PlaySummary } from "../../shared/models.ts"
-import { toSequencePitches, toStrikeZonePitches, zoneBounds } from "../game/adapters.ts"
+import { zoneBounds } from "../game/adapters.ts"
+import { usePitchHover } from "../game/usePitchHover.ts"
 import { scrollX } from "../lib/layout.ts"
 import { PlayerImage } from "./PlayerImage.tsx"
 import { LabeledStrikeZonePlot } from "./StrikeZone.tsx"
@@ -40,6 +41,7 @@ export function PlayCard({
   const [open, setOpen] = useState(false)
   const canExpand = Boolean(expandable && pitches && pitches.length > 0)
   const bounds = pitches ? zoneBounds(pitches) : {}
+  const hover = usePitchHover(pitches ?? [])
 
   return (
     <div
@@ -92,14 +94,24 @@ export function PlayCard({
           }}
         >
           <LabeledStrikeZonePlot
-            pitches={toStrikeZonePitches(pitches)}
+            pitches={hover.zonePitches}
             {...bounds}
             colorBy="result"
             width="100%"
             legend={false}
+            focused={hover.zoneFocused}
+            onFocus={hover.onZoneFocus}
           />
           <div style={scrollX}>
-            <PitchSequence pitches={toSequencePitches(pitches)} {...bounds} showSpin showLocation={false} dense />
+            <PitchSequence
+              pitches={hover.sequencePitches}
+              {...bounds}
+              showSpin
+              showLocation={false}
+              dense
+              focused={hover.sequenceFocused}
+              onFocus={hover.onSequenceFocus}
+            />
           </div>
         </div>
       ) : null}
