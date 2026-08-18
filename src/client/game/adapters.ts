@@ -106,6 +106,12 @@ export function zoneBounds(pitches: Pitch[]): { zoneTop?: number; zoneBottom?: n
 	return { zoneTop: withZone.strikeZone.top, zoneBottom: withZone.strikeZone.bottom };
 }
 
+/** `TOP 3.42 · BOT 1.59 FT` — omitted until a pitch has carried the batter's zone. */
+export function formatZoneBounds(bounds: { zoneTop?: number; zoneBottom?: number }): string | undefined {
+	if (bounds.zoneTop === undefined || bounds.zoneBottom === undefined) return undefined;
+	return `TOP ${bounds.zoneTop.toFixed(2)} · BOT ${bounds.zoneBottom.toFixed(2)} FT`;
+}
+
 // ---------- play by play ----------
 
 export interface PlayByPlayRow {

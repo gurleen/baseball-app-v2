@@ -1,11 +1,12 @@
 import { useState, type CSSProperties, type ReactNode } from "react"
 import { Badge } from "@hydra-tv/ui"
-import { PitchSequence, StrikeZonePlot } from "@hydra-tv/sports"
+import { PitchSequence } from "@hydra-tv/sports"
 
 import type { Pitch, PlaySummary } from "../../shared/models.ts"
 import { toSequencePitches, toStrikeZonePitches, zoneBounds } from "../game/adapters.ts"
 import { scrollX } from "../lib/layout.ts"
 import { PlayerImage } from "./PlayerImage.tsx"
+import { LabeledStrikeZonePlot } from "./StrikeZone.tsx"
 
 const card: CSSProperties = {
   display: "flex",
@@ -90,7 +91,7 @@ export function PlayCard({
             paddingTop: "var(--sp-3)",
           }}
         >
-          <StrikeZonePlot
+          <LabeledStrikeZonePlot
             pitches={toStrikeZonePitches(pitches)}
             {...bounds}
             colorBy="result"
@@ -98,7 +99,7 @@ export function PlayCard({
             legend={false}
           />
           <div style={scrollX}>
-            <PitchSequence pitches={toSequencePitches(pitches)} {...bounds} showSpin dense />
+            <PitchSequence pitches={toSequencePitches(pitches)} {...bounds} showSpin showLocation={false} dense />
           </div>
         </div>
       ) : null}

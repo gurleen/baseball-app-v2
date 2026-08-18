@@ -1,12 +1,13 @@
 import { Panel } from "@hydra-tv/ui"
-import { PitchSequence, StrikeZonePlot } from "@hydra-tv/sports"
+import { PitchSequence } from "@hydra-tv/sports"
 
 import type { GameSnapshot, LivePlay, PlaySummary } from "../../shared/models.ts"
-import { currentLineup, displayedPlay, offenseSide, toSequencePitches, toStrikeZonePitches, zoneBounds } from "../game/adapters.ts"
+import { currentLineup, displayedPlay, formatZoneBounds, offenseSide, toSequencePitches, toStrikeZonePitches, zoneBounds } from "../game/adapters.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted, numeric, table, td, th } from "../lib/table.ts"
 import { hitFromPitches, PlayCard, playBadge } from "./PlayCard.tsx"
 import { PreviousPlays } from "./PreviousPlays.tsx"
+import { LabeledStrikeZonePlot } from "./StrikeZone.tsx"
 
 export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
   const play = displayedPlay(snapshot)
@@ -21,6 +22,7 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
 
   const pitches = play.pitches
   const bounds = zoneBounds(pitches)
+  const zoneLabel = formatZoneBounds(bounds)
   const batter = snapshot.players[play.batterId]
   const last = pitches.at(-1)
   const completed = isCompletedPlay(play)
@@ -33,11 +35,12 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
       <Panel
         style={shrinkable}
         title={batter ? `${batter.shortName} ${batter.batSide ? `(${batter.batSide})` : ""}`.trim() : "BATTER"}
+        meta={zoneLabel}
         padded={false}
         bodyStyle={{ padding: "var(--sp-3)" }}
       >
         {pitches.length > 0 ? (
-          <StrikeZonePlot pitches={toStrikeZonePitches(pitches)} {...bounds} colorBy="result" width="100%" />
+          <LabeledStrikeZonePlot pitches={toStrikeZonePitches(pitches)} {...bounds} colorBy="result" width="100%" />
         ) : (
           <div style={muted}>Waiting for the first pitch of this at-bat.</div>
         )}
@@ -58,7 +61,7 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
         ) : null}
         {pitches.length > 0 ? (
           <div style={scrollX}>
-            <PitchSequence pitches={toSequencePitches(pitches)} {...bounds} showSpin />
+            <PitchSequence pitches={toSequencePitches(pitches)} {...bounds} showSpin showLocation={false} />
           </div>
         ) : (
           <div style={{ ...muted, padding: "var(--sp-3)" }}>No pitches yet.</div>

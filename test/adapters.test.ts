@@ -4,6 +4,7 @@ import {
 	absChallengeRows,
 	canShowAtBat,
 	currentLineup,
+	formatZoneBounds,
 	periodLabel,
 	toPlayByPlayRows,
 	toSequencePitches,
@@ -67,6 +68,18 @@ describe("zoneBounds", () => {
 
 	test("returns nothing when no pitch is tracked, so the component defaults apply", () => {
 		expect(zoneBounds([])).toEqual({});
+	});
+});
+
+describe("formatZoneBounds", () => {
+	test("prints top and bottom in feet to two decimals", () => {
+		expect(formatZoneBounds({ zoneTop: 3.42, zoneBottom: 1.59 })).toBe("TOP 3.42 · BOT 1.59 FT");
+	});
+
+	test("returns nothing when the batter's zone has not been tracked yet", () => {
+		expect(formatZoneBounds({})).toBeUndefined();
+		expect(formatZoneBounds({ zoneTop: 3.42 })).toBeUndefined();
+		expect(formatZoneBounds({ zoneBottom: 1.59 })).toBeUndefined();
 	});
 });
 
