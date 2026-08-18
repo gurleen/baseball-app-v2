@@ -5,6 +5,7 @@ import { z } from "zod"
 import { useGameStream } from "../game/useGameStream.ts"
 import { canShowAtBat } from "../game/adapters.ts"
 import { fullWidthColumn, scrollX } from "../lib/layout.ts"
+import { typeLabel } from "../lib/type.ts"
 import { GameHeader } from "../components/GameHeader.tsx"
 import { AtBatTab } from "../components/AtBatTab.tsx"
 import { BoxScoreTab } from "../components/BoxScoreTab.tsx"
@@ -72,6 +73,7 @@ function GamePage() {
       {!game.connected ? (
         <div
           style={{
+            ...typeLabel,
             background: "var(--warn-bg)",
             border: "1px solid var(--warn)",
             borderRadius: "var(--radius-1)",
@@ -87,7 +89,7 @@ function GamePage() {
       <GameHeader snapshot={snapshot} />
 
       {(game.delayMs > 0 || game.paused || game.queued > 0) && snapshot.state.kind === "live" ? (
-        <div style={{ display: "flex", gap: "var(--sp-3)", flexWrap: "wrap", color: "var(--fg-3)", fontSize: "var(--fs-10)" }}>
+        <div style={{ ...typeLabel, display: "flex", gap: "var(--sp-3)", flexWrap: "wrap", color: "var(--fg-3)", fontSize: "var(--fs-10)" }}>
           {game.delayMs > 0 ? <span>DELAY {(game.delayMs / 1000).toFixed(1)}s</span> : null}
           {game.paused ? <span style={{ color: "var(--warn)" }}>PAUSED</span> : null}
           {game.queued > 0 ? <span>{game.queued} QUEUED</span> : null}

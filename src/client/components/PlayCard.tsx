@@ -6,6 +6,7 @@ import type { Pitch, PlaySummary } from "../../shared/models.ts"
 import { zoneBounds } from "../game/adapters.ts"
 import { usePitchHover } from "../game/usePitchHover.ts"
 import { scrollX } from "../lib/layout.ts"
+import { copy, data } from "../lib/type.ts"
 import { PlayerImage } from "./PlayerImage.tsx"
 import { LabeledStrikeZonePlot } from "./StrikeZone.tsx"
 
@@ -57,10 +58,10 @@ export function PlayCard({
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--sp-2)" }}>
             <Badge label={badge.toUpperCase()} kind={scoring ? "warn" : "neutral"} />
             {scorecard ? (
-              <span style={{ fontWeight: 800, letterSpacing: "0.08em", fontSize: "var(--fs-14)" }}>{scorecard}</span>
+              <span style={{ ...data, fontWeight: 800, letterSpacing: "0.08em", fontSize: "var(--fs-14)" }}>{scorecard}</span>
             ) : null}
           </div>
-          <p style={{ margin: "var(--sp-2) 0 0", fontSize: "var(--fs-11)", lineHeight: 1.4 }}>{description}</p>
+          <p style={{ ...copy, margin: "var(--sp-2) 0 0", fontSize: "var(--fs-13)", lineHeight: 1.4 }}>{description}</p>
           {hit ? <HitLine hit={hit} /> : null}
         </div>
         {canExpand ? (

@@ -6,6 +6,7 @@ import { currentLineup, displayedPlay, formatZoneBounds, offenseSide, zoneBounds
 import { usePitchHover } from "../game/usePitchHover.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted, numeric, table, td, th } from "../lib/table.ts"
+import { copy } from "../lib/type.ts"
 import { hitFromPitches, PlayCard, playBadge } from "./PlayCard.tsx"
 import { PreviousPlays } from "./PreviousPlays.tsx"
 import { LabeledStrikeZonePlot } from "./StrikeZone.tsx"
@@ -110,7 +111,7 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
                   return (
                     <tr key={playerId} style={current ? { background: "var(--warn-bg)" } : undefined}>
                       <td style={{ ...td, ...numeric, fontWeight: 700 }}>{slot}</td>
-                      <td style={td}>{player?.shortName ?? line?.name ?? `#${playerId}`}</td>
+                      <td style={{ ...td, ...copy, fontSize: "var(--fs-13)" }}>{player?.shortName ?? line?.name ?? `#${playerId}`}</td>
                       <td style={{ ...td, ...numeric, ...muted }}>{line?.position ?? player?.position ?? "—"}</td>
                     </tr>
                   )
