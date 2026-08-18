@@ -5,7 +5,7 @@ to the browser as typed domain events.
 
 ```sh
 bun install
-bun run dev          # http://localhost:3000
+bun run dev          # http://localhost:3030
 bun run dev:replay   # no network — replays a recorded game
 ```
 

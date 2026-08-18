@@ -5,7 +5,7 @@
       "name": "baseball-app",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["--hot", "src/server/index.ts"],
-      "port": 3000
+      "port": 3030
     },
     {
       "name": "baseball-app-replay",

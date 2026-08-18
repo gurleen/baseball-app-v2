@@ -7,7 +7,7 @@ previous app's per-viewer polling of statsapi.
 ## Commands
 
 ```sh
-bun run dev          # app + /rpc + /ws on :3000
+bun run dev          # app + /rpc + /ws on :3030
 bun run dev:replay   # same, but watchers replay a recorded fixture (no network)
 bun run routes       # tsr watch — regenerates routeTree.gen.ts from src/client/routes
 bun test

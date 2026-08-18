@@ -5,7 +5,7 @@ import index from "../index.html";
 import { gameRegistry } from "./game/registry.ts";
 import { router } from "./router.ts";
 
-const port = Number(process.env.PORT ?? 3000);
+const port = Number(process.env.PORT ?? 3030);
 
 // Two adapters over one router. The WebSocket handler carries everything the
 // live game page needs — including the `game.subscribe` event iterator — while

@@ -1,7 +1,7 @@
 // End-to-end check of the live stream with no browser involved: connects to a
 // running server over the WebSocket and prints events as they arrive.
 //
-//   bun run scripts/watch-game.ts <gamePk> [--url ws://localhost:3000/ws]
+//   bun run scripts/watch-game.ts <gamePk> [--url ws://localhost:3030/ws]
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/websocket";
 import type { RouterClient } from "@orpc/server";
@@ -16,7 +16,7 @@ if (!Number.isFinite(gamePk)) {
 }
 
 const urlFlag = process.argv.indexOf("--url");
-const url = urlFlag === -1 ? "ws://localhost:3000/ws" : process.argv[urlFlag + 1]!;
+const url = urlFlag === -1 ? "ws://localhost:3030/ws" : process.argv[urlFlag + 1]!;
 
 const websocket = new WebSocket(url);
 await new Promise<void>((resolve, reject) => {
