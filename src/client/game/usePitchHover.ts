@@ -1,13 +1,17 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import type { Pitch } from "../../shared/models.ts"
 import { toSequencePitches, toStrikeZonePitches } from "./adapters.ts"
 
 /** Shared hover focus for a strike-zone plot and its pitch-sequence table. */
-export function usePitchHover(pitches: Pitch[]) {
+export function usePitchHover(pitches: Pitch[], atBatIndex?: number | null) {
 	const [focusedNumber, setFocusedNumber] = useState<number | null>(null)
 	const zonePitches = toStrikeZonePitches(pitches)
 	const sequencePitches = toSequencePitches(pitches)
+
+	useEffect(() => {
+		setFocusedNumber(null)
+	}, [atBatIndex])
 
 	const zoneIndex = focusedNumber == null ? -1 : zonePitches.findIndex(pitch => pitch.number === focusedNumber)
 	const sequenceIndex = focusedNumber == null ? -1 : pitches.findIndex(pitch => pitch.pitchNumber === focusedNumber)

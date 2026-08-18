@@ -42,7 +42,7 @@ export function PlayCard({
   const [open, setOpen] = useState(false)
   const canExpand = Boolean(expandable && pitches && pitches.length > 0)
   const bounds = pitches ? zoneBounds(pitches) : {}
-  const hover = usePitchHover(pitches ?? [])
+  const hover = usePitchHover(pitches ?? [], pitches?.[0]?.atBatIndex)
 
   return (
     <div

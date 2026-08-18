@@ -13,23 +13,14 @@ import { LabeledStrikeZonePlot } from "./StrikeZone.tsx"
 
 export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
   const play = displayedPlay(snapshot)
-  const hover = usePitchHover(play?.pitches ?? [])
-
-  if (!play) {
-    return (
-      <Panel style={shrinkable} title="AT BAT">
-        <div style={{ color: "var(--fg-3)" }}>No pitches yet.</div>
-      </Panel>
-    )
-  }
-
-  const pitches = play.pitches
+  const pitches = play?.pitches ?? []
+  const hover = usePitchHover(pitches, play?.atBatIndex)
   const bounds = zoneBounds(pitches)
   const zoneLabel = formatZoneBounds(bounds)
-  const batter = snapshot.players[play.batterId]
+  const batter = play ? snapshot.players[play.batterId] : undefined
   const last = pitches.at(-1)
-  const completed = isCompletedPlay(play)
-  const showResult = completed || last?.call.isInPlay === true
+  const completed = play != null && isCompletedPlay(play)
+  const showResult = play != null && (completed || last?.call.isInPlay === true)
   const side = offenseSide(snapshot)
   const lineup = side ? currentLineup(snapshot.boxscore[side]) : []
 
@@ -42,22 +33,19 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
         padded={false}
         bodyStyle={{ padding: "var(--sp-3)" }}
       >
-        {pitches.length > 0 ? (
-          <LabeledStrikeZonePlot
-            pitches={hover.zonePitches}
-            {...bounds}
-            colorBy="result"
-            width="100%"
-            focused={hover.zoneFocused}
-            onFocus={hover.onZoneFocus}
-          />
-        ) : (
-          <div style={muted}>Waiting for the first pitch of this at-bat.</div>
-        )}
+        <LabeledStrikeZonePlot
+          pitches={hover.zonePitches}
+          {...bounds}
+          colorBy="result"
+          width="100%"
+          showEmpty={hover.zonePitches.length === 0}
+          focused={hover.zoneFocused}
+          onFocus={hover.onZoneFocus}
+        />
       </Panel>
 
       <Panel style={{ ...shrinkable, minWidth: 0 }} title="SEQUENCE" meta={`${pitches.length} pitches`} padded={false}>
-        {showResult ? (
+        {showResult && play ? (
           <div style={{ padding: "var(--sp-3)" }}>
             <PlayCard
               playerId={play.batterId}
@@ -69,20 +57,17 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
             />
           </div>
         ) : null}
-        {pitches.length > 0 ? (
-          <div style={scrollX}>
-            <PitchSequence
-              pitches={hover.sequencePitches}
-              {...bounds}
-              showSpin
-              showLocation={false}
-              focused={hover.sequenceFocused}
-              onFocus={hover.onSequenceFocus}
-            />
-          </div>
-        ) : (
-          <div style={{ ...muted, padding: "var(--sp-3)" }}>No pitches yet.</div>
-        )}
+        <div style={scrollX}>
+          <PitchSequence
+            pitches={hover.sequencePitches}
+            {...bounds}
+            showSpin
+            showLocation={false}
+            showEmpty={hover.sequencePitches.length === 0}
+            focused={hover.sequenceFocused}
+            onFocus={hover.onSequenceFocus}
+          />
+        </div>
       </Panel>
 
       <PreviousPlays snapshot={snapshot} height={480} />
@@ -106,7 +91,7 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
                 </tr>
               ) : (
                 lineup.map(({ slot, playerId, line }) => {
-                  const current = playerId === play.batterId
+                  const current = play != null && playerId === play.batterId
                   const player = snapshot.players[playerId]
                   return (
                     <tr key={playerId} style={current ? { background: "var(--warn-bg)" } : undefined}>
