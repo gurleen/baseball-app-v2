@@ -6,6 +6,7 @@ import { gameRegistry } from "./game/registry.ts";
 import { router } from "./router.ts";
 
 const port = Number(process.env.PORT ?? 3030);
+const isDev = process.env.NODE_ENV !== "production";
 
 // Two adapters over one router. The WebSocket handler carries everything the
 // live game page needs — including the `game.subscribe` event iterator — while
@@ -16,6 +17,7 @@ const httpHandler = new FetchRPCHandler(router);
 
 const server = Bun.serve({
 	port,
+	hostname: "0.0.0.0",
 	routes: {
 		"/": index,
 		"/game/*": index,
@@ -41,10 +43,12 @@ const server = Bun.serve({
 		message: (ws, message) => wsHandler.message(ws, message),
 		close: ws => wsHandler.close(ws),
 	},
-	development: {
-		hmr: true,
-		console: true,
-	},
+	development: isDev
+		? {
+				hmr: true,
+				console: true,
+			}
+		: false,
 });
 
 // Stop the poll loops on shutdown rather than leaving upstream requests in
