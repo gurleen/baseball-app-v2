@@ -5,6 +5,7 @@ import type { GameSnapshot } from "../../shared/models.ts"
 import { findPitchingLine, toPlayByPlayRows, toSprayBalls } from "../game/adapters.ts"
 import { responsiveColumns, shrinkable } from "../lib/layout.ts"
 import { muted } from "../lib/table.ts"
+import { copy } from "../lib/type.ts"
 import { playerPhotoUrl } from "./PlayerImage.tsx"
 
 export function SummaryTab({ snapshot }: { snapshot: GameSnapshot }) {
@@ -119,7 +120,7 @@ function GameInfoPanel({ snapshot }: { snapshot: GameSnapshot }) {
         {rows.map(row => (
           <div key={row.label} style={{ border: "1px solid var(--line-2)", background: "var(--bg-3)", padding: "var(--sp-3)" }}>
             <dt style={muted}>{row.label.toUpperCase()}</dt>
-            <dd style={{ margin: "var(--sp-1) 0 0", fontSize: "var(--fs-11)" }}>{row.value}</dd>
+            <dd style={{ ...copy, margin: "var(--sp-1) 0 0", fontSize: "var(--fs-13)" }}>{row.value}</dd>
           </div>
         ))}
       </dl>

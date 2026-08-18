@@ -5,7 +5,7 @@ import { BaseState, CountDisplay, PlayerCard } from "@hydra-tv/sports"
 import type { ScheduleGame, SchedulePlayer, ScheduleTeam } from "../../server/procedures/schedule.ts"
 import { formatTime } from "../lib/date.ts"
 import { shrinkable } from "../lib/layout.ts"
-import { data, typeLabel } from "../lib/type.ts"
+import { copy, data, typeLabel } from "../lib/type.ts"
 import { playerPhotoUrl } from "./PlayerImage.tsx"
 import { TeamLogo } from "./TeamLogo.tsx"
 
@@ -169,11 +169,12 @@ function TeamRow({ team }: { team: ScheduleTeam }) {
   return (
     <div style={teamGrid}>
       <span style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", minWidth: 0 }}>
-        <TeamLogo teamId={team.id} width={30} />
+        <TeamLogo teamId={team.id} width={36} />
         <span
           style={{
-            fontSize: "var(--fs-14)",
-            fontWeight: 500,
+            ...copy,
+            fontSize: "var(--fs-16)",
+            fontWeight: 600,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",

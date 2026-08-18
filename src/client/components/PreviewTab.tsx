@@ -5,6 +5,7 @@ import type { GameSnapshot } from "../../shared/models.ts"
 import { probablePitcherLine, startingLineup } from "../game/adapters.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted, numeric, stripedRow, table, td, th } from "../lib/table.ts"
+import { copy } from "../lib/type.ts"
 import { PlayerImage, playerPhotoUrl } from "./PlayerImage.tsx"
 import { StatTable } from "./StatTable.tsx"
 import { TeamLogo } from "./TeamLogo.tsx"
@@ -49,7 +50,7 @@ function PreviewTeam({ snapshot, side }: { snapshot: GameSnapshot; side: "home" 
               number={player.jerseyNumber ?? undefined}
               position={player.pitchHand ? `Throws ${player.pitchHand}` : undefined}
               photo={playerPhotoUrl(player.id)}
-              size="sm"
+              size="md"
               style={{ minWidth: 0 }}
             />
             {starter ? (
@@ -102,9 +103,18 @@ function PreviewTeam({ snapshot, side }: { snapshot: GameSnapshot; side: "home" 
                     <td style={{ ...td, ...numeric, fontWeight: 700 }}>{slot}</td>
                     <td style={td}>
                       <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", minWidth: 0 }}>
-                        <PlayerImage playerId={playerId} size={28} />
+                        <PlayerImage playerId={playerId} size={40} />
                         <span style={{ ...muted, flexShrink: 0 }}>{profile?.jerseyNumber ?? ""}</span>
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <span
+                          style={{
+                            ...copy,
+                            fontSize: "var(--fs-14)",
+                            fontWeight: 500,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {profile?.fullName ?? line?.name ?? `#${playerId}`}
                         </span>
                       </div>

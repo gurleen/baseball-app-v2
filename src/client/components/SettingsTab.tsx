@@ -60,7 +60,7 @@ export function SettingsTab({ game }: { game: UseGameStreamResult }) {
           <Switch checked={game.paused} onChange={checked => (checked ? pause() : resume())} />
         </FieldRow>
 
-        <div style={{ color: "var(--fg-3)", fontSize: "var(--fs-10)", marginTop: "var(--sp-3)" }}>
+        <div style={{ color: "var(--fg-3)", fontSize: "var(--fs-13)", marginTop: "var(--sp-3)" }}>
           Press PAUSE, then RESUME the instant the current pitch reaches your screen. Everything
           after that is held back by the same amount.
         </div>

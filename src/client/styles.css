@@ -31,4 +31,5 @@
 
 body {
   font-family: var(--font-copy);
+  font-size: var(--fs-13);
 }

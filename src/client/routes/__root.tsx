@@ -27,7 +27,7 @@ function RootLayout() {
       <NavBar
         brand={
           <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
-            <Link to="/" style={{ ...copy, color: "var(--fg-1)", textDecoration: "none" }}>
+            <Link to="/" style={{ ...copy, color: "var(--fg-1)", textDecoration: "none", fontSize: "var(--fs-16)" }}>
               Gurleen's Baseball App
             </Link>
             <Badge kind="neutral" label="BETA" />

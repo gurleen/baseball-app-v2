@@ -11,7 +11,7 @@ import {
 } from "../game/adapters.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted } from "../lib/table.ts"
-import { data, typeLabel } from "../lib/type.ts"
+import { copy, data, typeLabel } from "../lib/type.ts"
 import { playerPhotoUrl } from "./PlayerImage.tsx"
 import { TeamLogo } from "./TeamLogo.tsx"
 
@@ -123,8 +123,8 @@ function TeamScoreRow({ side, snapshot }: { side: "home" | "away"; snapshot: Gam
       <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", minWidth: 0 }}>
         <TeamLogo teamId={team.id} width={56} />
         <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4em", fontSize: "var(--fs-14)", lineHeight: 1.2 }}>
-            {showFranchise ? <span style={{ color: "var(--fg-3)" }}>{franchise}</span> : null}
+          <div style={{ ...copy, display: "flex", flexWrap: "wrap", gap: "0.4em", fontSize: "var(--fs-20)", lineHeight: 1.15 }}>
+            {showFranchise ? <span style={{ color: "var(--fg-3)", fontWeight: 500 }}>{franchise}</span> : null}
             <span style={{ fontWeight: 700 }}>{club || team.name}</span>
           </div>
           {team.record ? <div style={muted}>{team.record}</div> : null}
@@ -183,7 +183,7 @@ function MatchupColumn({
                   ]
                 : undefined
             }
-            size="sm"
+            size="md"
             style={{ minWidth: 0 }}
           />
         </div>
@@ -207,7 +207,7 @@ function MatchupColumn({
                   ]
                 : undefined
             }
-            size="sm"
+            size="md"
             style={{ minWidth: 0 }}
           />
         </div>

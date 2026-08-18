@@ -61,7 +61,7 @@ export function PlayCard({
               <span style={{ ...data, fontWeight: 800, letterSpacing: "0.08em", fontSize: "var(--fs-14)" }}>{scorecard}</span>
             ) : null}
           </div>
-          <p style={{ ...copy, margin: "var(--sp-2) 0 0", fontSize: "var(--fs-11)", lineHeight: 1.4 }}>{description}</p>
+          <p style={{ ...copy, margin: "var(--sp-2) 0 0", fontSize: "var(--fs-13)", lineHeight: 1.4 }}>{description}</p>
           {hit ? <HitLine hit={hit} /> : null}
         </div>
         {canExpand ? (
