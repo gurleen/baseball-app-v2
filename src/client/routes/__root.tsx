@@ -25,9 +25,12 @@ function RootLayout() {
     >
       <NavBar
         brand={
-          <Link to="/" style={{ color: "var(--fg-1)", textDecoration: "none" }}>
-            BASEBALL
-          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
+            <Link to="/" style={{ color: "var(--fg-1)", textDecoration: "none" }}>
+              Gurleen's Baseball App
+            </Link>
+            <Badge kind="neutral" label="BETA" />
+          </div>
         }
         actions={
           replay ? (
