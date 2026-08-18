@@ -104,7 +104,17 @@ function PreviewTeam({ snapshot, side }: { snapshot: GameSnapshot; side: "home" 
                     <td style={td}>
                       <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", minWidth: 0 }}>
                         <PlayerImage playerId={playerId} size={40} />
-                        <span style={{ ...muted, flexShrink: 0 }}>{profile?.jerseyNumber ?? ""}</span>
+                        <span
+                          style={{
+                            ...muted,
+                            flexShrink: 0,
+                            width: "1.5rem",
+                            textAlign: "right",
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {profile?.jerseyNumber ?? ""}
+                        </span>
                         <span
                           style={{
                             ...copy,
