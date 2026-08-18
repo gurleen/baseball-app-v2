@@ -1,0 +1,25 @@
+/* Tailwind provides layout utilities only. All color, type and spacing values
+   come from @hydra-tv/tokens, which is imported first in main.tsx so its
+   global resets land before Tailwind's preflight. */
+@import "tailwindcss";
+
+@theme {
+  --color-bg-0: var(--bg-0);
+  --color-bg-1: var(--bg-1);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-bg-4: var(--bg-4);
+  --color-line-1: var(--line-1);
+  --color-line-2: var(--line-2);
+  --color-line-3: var(--line-3);
+  --color-fg-1: var(--fg-1);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --color-err: var(--err);
+  --color-ch-1: var(--ch-1);
+  --color-ch-2: var(--ch-2);
+  --color-ch-3: var(--ch-3);
+  --color-ch-4: var(--ch-4);
+}

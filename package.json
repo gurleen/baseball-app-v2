@@ -1,0 +1,48 @@
+{
+  "name": "baseball-app",
+  "module": "src/server/index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@tanstack/react-router-devtools": "^1.167.1",
+    "@tanstack/router-cli": "^1.167.30",
+    "@types/bun": "latest",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "bun-plugin-tailwind": "^0.1.2",
+    "tailwindcss": "^4.3.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@hydra-tv/sports": "^0.3.0",
+    "@hydra-tv/tokens": "^0.2.0",
+    "@hydra-tv/ui": "^0.3.0",
+    "@orpc/client": "^1.15.0",
+    "@orpc/server": "^1.15.0",
+    "@orpc/tanstack-query": "^1.15.0",
+    "@tanstack/react-query": "^5.101.4",
+    "@tanstack/react-router": "1.170.18",
+    "fast-json-patch": "^3.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
+  },
+  "scripts": {
+    "dev": "bun --hot src/server/index.ts",
+    "routes": "tsr watch",
+    "build": "bun run scripts/build.ts",
+    "start": "bun src/server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "validate-gumbo": "bun run scripts/validate-gumbo.ts",
+    "record-fixture": "bun run scripts/record-fixture.ts",
+    "check-join": "bun run scripts/check-join.ts",
+    "watch-game": "bun run scripts/watch-game.ts",
+    "dev:replay": "BASEBALL_REPLAY=live bun --hot src/server/index.ts"
+  },
+  "overrides": {
+    "@tanstack/router-core": "1.171.15"
+  }
+}
