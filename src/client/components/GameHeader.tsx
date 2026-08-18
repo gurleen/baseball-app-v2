@@ -155,8 +155,8 @@ function DueUpColumn({
 }) {
   return (
     <div
+      className="hidden xl:flex"
       style={{
-        display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         gap: "var(--sp-3)",
