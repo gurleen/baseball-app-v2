@@ -7,6 +7,8 @@ import {
 	formatZoneBounds,
 	periodLabel,
 	toPlayByPlayRows,
+	toPitchMixBars,
+	formatPitchMixBarValue,
 	toSequencePitches,
 	toSportsResult,
 	toSprayBalls,
@@ -101,6 +103,25 @@ describe("PitchSequence projection", () => {
 				expect(allowed.has(row.kind!)).toBe(true);
 			}
 		}
+	});
+});
+
+describe("PitchMix projection", () => {
+	test("maps server mix entries onto BarChart rows with short codes and data-viz colors", () => {
+		const bars = toPitchMixBars([
+			{ code: "FF", label: "4-Seam Fastball", count: 44, percent: 44 },
+			{ code: "SL", label: "Slider", count: 27, percent: 27 },
+		]);
+
+		expect(bars).toEqual([
+			{ label: "FF", value: 44, count: 44, color: "var(--ch-1)" },
+			{ label: "SL", value: 27, count: 27, color: "var(--ch-2)" },
+		]);
+	});
+
+	test("formats the value column with percent and pitch count", () => {
+		const bar = toPitchMixBars([{ code: "FF", label: "4-Seam", count: 51, percent: 57 }])[0]!;
+		expect(formatPitchMixBarValue(bar)).toBe("57% · 51");
 	});
 });
 

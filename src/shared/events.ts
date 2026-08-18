@@ -41,6 +41,7 @@ export type GameEvent =
 	| { t: "abs"; abs: AbsChallengeState | null }
 	| { t: "decisions"; decisions: GameDecisions | null }
 	| { t: "gameInfo"; gameInfo: GameInfo }
+	| { t: "pitchMix"; pitchMixByPitcher: GameSnapshot["pitchMixByPitcher"] }
 	/** Keeps the socket warm and lets the client detect a stalled feed. */
 	| { t: "heartbeat"; at: number };
 

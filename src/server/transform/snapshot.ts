@@ -11,6 +11,7 @@ import type {
 import { toBoxscore } from "./boxscore.ts";
 import { toLinescore } from "./linescore.ts";
 import { toLivePlay, toPlaySummary } from "./play.ts";
+import { toPitchMixByPitcher } from "./pitchMix.ts";
 import { toPlayers } from "./players.ts";
 import { toGameState } from "./state.ts";
 
@@ -101,6 +102,8 @@ export function toGameSnapshot(
 	const completed = plays.allPlays.filter(
 		play => play.about.isComplete && play.atBatIndex !== currentPlay?.atBatIndex,
 	);
+	const completedSummaries = completed.map(play => toPlaySummary(play, savantByPlayId));
+	const livePlay = toLivePlay(currentPlay, feed.liveData.linescore.offense?.onDeck?.id ?? null, savantByPlayId);
 
 	return {
 		gamePk: feed.gamePk,
@@ -115,8 +118,8 @@ export function toGameSnapshot(
 			dayNight: feed.gameData.datetime.dayNight ?? null,
 		},
 		linescore: toLinescore(feed),
-		currentPlay: toLivePlay(currentPlay, feed.liveData.linescore.offense?.onDeck?.id ?? null, savantByPlayId),
-		plays: completed.map(play => toPlaySummary(play, savantByPlayId)),
+		currentPlay: livePlay,
+		plays: completedSummaries,
 		players: toPlayers(feed),
 		boxscore: toBoxscore(feed),
 		abs: toAbsState(feed.gameData.absChallenges),
@@ -126,6 +129,7 @@ export function toGameSnapshot(
 		},
 		decisions: toDecisions(feed),
 		gameInfo: toGameInfo(feed),
+		pitchMixByPitcher: toPitchMixByPitcher(completedSummaries, livePlay),
 		updatedAt: now,
 	};
 }

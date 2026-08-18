@@ -4,6 +4,7 @@ import { loadGumboFixture, loadSavantFixture } from "./fixtures.ts";
 import { indexSavantPitches } from "../src/server/mlb/schemas/savant.ts";
 import { toGameSnapshot } from "../src/server/transform/snapshot.ts";
 import { diffSnapshots, iteratePitches } from "../src/server/transform/diff.ts";
+import { toPitchMixByPitcher } from "../src/server/transform/pitchMix.ts";
 import { reduceGameEvents } from "../src/client/game/reducer.ts";
 import type { GameSnapshot } from "../src/shared/models.ts";
 
@@ -144,6 +145,50 @@ describe("pitch transform", () => {
 	});
 });
 
+describe("pitch mix", () => {
+	test("snapshot includes in-game mix for pitchers who have thrown", async () => {
+		const snapshot = await snapshotFor("final");
+		const starterId = snapshot.boxscore.home.pitching[0]!.playerId;
+		const mix = snapshot.pitchMixByPitcher[starterId];
+
+		expect(mix).toBeDefined();
+		expect(mix!.length).toBeGreaterThan(0);
+		expect(mix!.reduce((sum, entry) => sum + entry.percent, 0)).toBeGreaterThanOrEqual(99);
+		expect(mix!.reduce((sum, entry) => sum + entry.percent, 0)).toBeLessThanOrEqual(100);
+	});
+
+	test("counts match a manual tally from the play log", async () => {
+		const snapshot = await snapshotFor("final");
+		const starterId = snapshot.boxscore.home.pitching[0]!.playerId;
+		const manual = new Map<string, number>();
+
+		for (const play of snapshot.plays) {
+			if (play.pitcherId !== starterId) continue;
+			for (const pitch of play.pitches) {
+				if (!pitch.type) continue;
+				manual.set(pitch.type.code, (manual.get(pitch.type.code) ?? 0) + 1);
+			}
+		}
+		if (snapshot.currentPlay?.pitcherId === starterId) {
+			for (const pitch of snapshot.currentPlay.pitches) {
+				if (!pitch.type) continue;
+				manual.set(pitch.type.code, (manual.get(pitch.type.code) ?? 0) + 1);
+			}
+		}
+
+		const mix = snapshot.pitchMixByPitcher[starterId]!;
+		expect(mix.reduce((sum, entry) => sum + entry.count, 0)).toBe([...manual.values()].reduce((a, b) => a + b, 0));
+		for (const entry of mix) {
+			expect(entry.count).toBe(manual.get(entry.code) ?? 0);
+		}
+	});
+
+	test("toPitchMixByPitcher returns nothing for a pitcher who has not appeared", async () => {
+		const snapshot = await snapshotFor("final");
+		expect(toPitchMixByPitcher(snapshot.plays, snapshot.currentPlay)[999_999_999]).toBeUndefined();
+	});
+});
+
 describe("linescore", () => {
 	test("uses the null / \"X\" convention LineScore renders", async () => {
 		const snapshot = await snapshotFor("final");
@@ -246,14 +291,38 @@ describe("diff / reduce round-trip", () => {
 		const next = await snapshotFor("live");
 		expect(next.currentPlay).not.toBeNull();
 
+		const slicedCurrentPlay = { ...next.currentPlay!, pitches: next.currentPlay!.pitches.slice(0, -1) };
 		const previous: GameSnapshot = {
 			...next,
-			currentPlay: { ...next.currentPlay!, pitches: next.currentPlay!.pitches.slice(0, -1) },
+			currentPlay: slicedCurrentPlay,
+			pitchMixByPitcher: toPitchMixByPitcher(next.plays, slicedCurrentPlay),
 		};
 
 		const events = diffSnapshots(previous, next);
 		expect(events.some(event => event.t === "pitch")).toBe(true);
+		expect(events.some(event => event.t === "pitchMix")).toBe(true);
 		expect(reduceGameEvents(previous, events)).toEqual(next);
+	});
+
+	test("pitchMix delta alone updates the client view", async () => {
+		const next = await snapshotFor("live");
+		expect(next.currentPlay).not.toBeNull();
+
+		const previous: GameSnapshot = {
+			...next,
+			currentPlay: { ...next.currentPlay!, pitches: next.currentPlay!.pitches.slice(0, -1) },
+			pitchMixByPitcher: toPitchMixByPitcher(next.plays, {
+				...next.currentPlay!,
+				pitches: next.currentPlay!.pitches.slice(0, -1),
+			}),
+		};
+
+		const events = diffSnapshots(previous, next);
+		const mixEvents = events.filter(event => event.t === "pitchMix");
+		expect(mixEvents).toHaveLength(1);
+
+		const replayed = reduceGameEvents(previous, mixEvents);
+		expect(replayed!.pitchMixByPitcher).toEqual(next.pitchMixByPitcher);
 	});
 
 	test("abs, decisions and gameInfo ride their own events", async () => {

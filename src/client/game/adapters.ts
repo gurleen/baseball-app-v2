@@ -2,6 +2,7 @@ import type {
 	BattingLine,
 	GameSnapshot,
 	Pitch,
+	PitchMixEntry,
 	PitchingLine,
 	PlaySummary,
 	TeamBox,
@@ -94,6 +95,31 @@ export function toSequencePitches(pitches: Pitch[]): SequencePitch[] {
 		x: pitch.location?.x,
 		z: pitch.location?.z,
 	}));
+}
+
+const PITCH_MIX_COLORS = ["var(--ch-1)", "var(--ch-2)", "var(--ch-3)", "var(--ch-4)"] as const;
+
+export interface PitchMixBar {
+	/** Short pitch-type code — fits the BarChart label gutter. */
+	label: string;
+	value: number;
+	count: number;
+	color: string;
+}
+
+/** Maps server-computed mix onto BarChart props. Labels use type codes so they always fit. */
+export function toPitchMixBars(entries: PitchMixEntry[]): PitchMixBar[] {
+	return entries.map((entry, index) => ({
+		label: entry.code,
+		value: entry.percent,
+		count: entry.count,
+		color: PITCH_MIX_COLORS[index % PITCH_MIX_COLORS.length]!,
+	}));
+}
+
+/** Formats the value column as "44% · 27". */
+export function formatPitchMixBarValue(bar: PitchMixBar): string {
+	return `${bar.value}% · ${bar.count}`;
 }
 
 /**

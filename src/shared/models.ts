@@ -117,6 +117,14 @@ export interface Pitch {
 	metrics: PitchMetrics | null;
 }
 
+/** In-game pitch-type usage for one pitcher, computed server-side. */
+export interface PitchMixEntry {
+	code: string;
+	label: string;
+	count: number;
+	percent: number;
+}
+
 export interface AbsReview {
 	isOverturned: boolean;
 	inProgress: boolean;
@@ -320,6 +328,8 @@ export interface GameSnapshot {
 	probablePitchers: { home: number | null; away: number | null };
 	decisions: GameDecisions | null;
 	gameInfo: GameInfo;
+	/** In-game pitch-type usage, keyed by pitcher id. Recomputed server-side each tick. */
+	pitchMixByPitcher: Record<number, PitchMixEntry[]>;
 	/** Epoch ms when the server built this snapshot. */
 	updatedAt: number;
 }

@@ -57,6 +57,9 @@ export function reduceGameEvent(snapshot: GameSnapshot | null, event: GameEvent)
 		case "gameInfo":
 			return { ...snapshot, gameInfo: event.gameInfo };
 
+		case "pitchMix":
+			return { ...snapshot, pitchMixByPitcher: event.pitchMixByPitcher };
+
 		case "heartbeat":
 			return snapshot;
 	}

@@ -31,6 +31,10 @@ export function diffSnapshots(previous: GameSnapshot | null, next: GameSnapshot)
 		}
 	}
 
+	if (!shallowEqual(previous.pitchMixByPitcher, next.pitchMixByPitcher)) {
+		events.push({ t: "pitchMix", pitchMixByPitcher: next.pitchMixByPitcher });
+	}
+
 	// Completed at-bats.
 	const previousPlays = new Set(previous.plays.map(play => play.atBatIndex));
 	for (const play of next.plays) {
