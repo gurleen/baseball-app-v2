@@ -19,6 +19,11 @@ export interface TeamRef {
 	id: number;
 	name: string;
 	abbreviation: string;
+	shortName: string;
+	franchiseName: string | null;
+	clubName: string | null;
+	/** "48-22" — omitted when the feed has not published a record yet. */
+	record: string | null;
 	/** Team-specific hex color, supplied by the app (MLB does not publish these). */
 	color?: string;
 }
@@ -26,6 +31,9 @@ export interface TeamRef {
 export interface PlayerProfile {
 	id: number;
 	fullName: string;
+	/** First / preferred given name, for matchup cards ("Gunnar" + lastName). */
+	useName: string;
+	lastName: string;
 	/** "Last, F." style short form for dense tables. */
 	shortName: string;
 	jerseyNumber: string | null;
@@ -177,6 +185,7 @@ export interface LinescoreSide {
 	hits: number;
 	errors: number;
 	leftOnBase: number;
+	moundVisitsRemaining: number | null;
 	innings: InningRuns[];
 }
 
@@ -204,6 +213,14 @@ export interface BattingLine {
 	so: number;
 	lob: number;
 	avg: string;
+	obp: string;
+	slg: string;
+	ops: string;
+	hr: number;
+	/** Season RBI — distinct from game `rbi`. */
+	seasonRbi: number;
+	/** GUMBO's own game-line, e.g. "1-4, HR, 2 RBI". */
+	summary: string | null;
 }
 
 export interface PitchingLine {
@@ -220,6 +237,15 @@ export interface PitchingLine {
 	pitches: number;
 	strikes: number;
 	era: string;
+	wins: number;
+	losses: number;
+	whip: string;
+	/** Season strikeouts — distinct from game `so`. */
+	seasonSo: number;
+	seasonIp: string;
+	bbPer9: string;
+	/** GUMBO's own game-line, e.g. "6.0 IP, 2 ER, 8 K". */
+	summary: string | null;
 }
 
 export interface TeamBox {
@@ -227,6 +253,10 @@ export interface TeamBox {
 	pitching: PitchingLine[];
 	battingTotals: Omit<BattingLine, "playerId" | "name" | "position" | "starter" | "battingOrder">;
 	pitchingTotals: Omit<PitchingLine, "playerId" | "name" | "starter">;
+	/** Current lineup, batting-spot order. */
+	battingOrder: number[];
+	bench: BattingLine[];
+	bullpen: PitchingLine[];
 }
 
 // ---------- snapshot ----------
@@ -242,9 +272,31 @@ export interface GameDatetime {
 	dayNight: string | null;
 }
 
+export interface AbsChallengeSide {
+	remaining: number;
+	usedSuccessful: number;
+	usedFailed: number;
+}
+
 export interface AbsChallengeState {
-	home: { remaining: number; used: number };
-	away: { remaining: number; used: number };
+	home: AbsChallengeSide;
+	away: AbsChallengeSide;
+}
+
+export interface GameDecisions {
+	winnerId: number | null;
+	loserId: number | null;
+	saveId: number | null;
+}
+
+export interface GameInfo {
+	durationMinutes: number | null;
+	attendance: number | null;
+	firstPitch: string | null;
+	weather: string | null;
+	wind: string | null;
+	officialScorer: string | null;
+	datacaster: string | null;
 }
 
 /**
@@ -265,6 +317,9 @@ export interface GameSnapshot {
 	players: Record<number, PlayerProfile>;
 	boxscore: { home: TeamBox; away: TeamBox };
 	abs: AbsChallengeState | null;
+	probablePitchers: { home: number | null; away: number | null };
+	decisions: GameDecisions | null;
+	gameInfo: GameInfo;
 	/** Epoch ms when the server built this snapshot. */
 	updatedAt: number;
 }

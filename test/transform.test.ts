@@ -15,6 +15,31 @@ async function snapshotFor(label: "final" | "live"): Promise<GameSnapshot> {
 }
 
 describe("toGameSnapshot", () => {
+	test("carries team records, probable pitchers and player names", async () => {
+		const snapshot = await snapshotFor("final");
+
+		expect(snapshot.teams.home.record).toMatch(/^\d+-\d+$/);
+		expect(snapshot.teams.away.abbreviation).toBe("BAL");
+		expect(snapshot.probablePitchers.home).toBeGreaterThan(0);
+		expect(snapshot.probablePitchers.away).toBeGreaterThan(0);
+		expect(snapshot.decisions?.winnerId).toBeGreaterThan(0);
+		expect(snapshot.decisions?.loserId).toBeGreaterThan(0);
+		expect(snapshot.gameInfo.officialScorer || snapshot.venue.name).toBeTruthy();
+
+		const player = Object.values(snapshot.players)[0]!;
+		expect(player.useName).toBeTruthy();
+		expect(player.lastName).toBeTruthy();
+	});
+
+	test("splits ABS challenges into overturned and confirmed", async () => {
+		const snapshot = await snapshotFor("live");
+		if (!snapshot.abs) return;
+
+		expect(snapshot.abs.home.remaining).toBeGreaterThanOrEqual(0);
+		expect(snapshot.abs.home.usedSuccessful).toBeGreaterThanOrEqual(0);
+		expect(snapshot.abs.home.usedFailed).toBeGreaterThanOrEqual(0);
+	});
+
 	test("builds a final game with no raw feed shapes leaking through", async () => {
 		const snapshot = await snapshotFor("final");
 
@@ -152,6 +177,11 @@ describe("boxscore", () => {
 
 		const runs = home.batting.reduce((sum, line) => sum + line.r, 0);
 		expect(runs).toBe(home.battingTotals.r);
+
+		expect(home.battingOrder.length).toBeGreaterThan(0);
+		expect(home.batting.some(line => line.obp !== undefined)).toBe(true);
+		expect(home.pitching[0]!.whip).toBeTruthy();
+		expect(home.bench.length + home.bullpen.length).toBeGreaterThan(0);
 	});
 });
 
@@ -223,6 +253,30 @@ describe("diff / reduce round-trip", () => {
 
 		const events = diffSnapshots(previous, next);
 		expect(events.some(event => event.t === "pitch")).toBe(true);
+		expect(reduceGameEvents(previous, events)).toEqual(next);
+	});
+
+	test("abs, decisions and gameInfo ride their own events", async () => {
+		const next = await snapshotFor("final");
+		const previous: GameSnapshot = {
+			...next,
+			abs: null,
+			decisions: null,
+			gameInfo: {
+				durationMinutes: null,
+				attendance: null,
+				firstPitch: null,
+				weather: null,
+				wind: null,
+				officialScorer: null,
+				datacaster: null,
+			},
+		};
+
+		const events = diffSnapshots(previous, next);
+		expect(events.some(event => event.t === "abs")).toBe(true);
+		expect(events.some(event => event.t === "decisions")).toBe(true);
+		expect(events.some(event => event.t === "gameInfo")).toBe(true);
 		expect(reduceGameEvents(previous, events)).toEqual(next);
 	});
 });

@@ -57,6 +57,7 @@ function toSide(feed: GumboFeed, side: "home" | "away"): LinescoreSide {
 		hits: team.hits ?? 0,
 		errors: team.errors ?? 0,
 		leftOnBase: team.leftOnBase ?? 0,
+		moundVisitsRemaining: feed.gameData.moundVisits?.[side].remaining ?? null,
 		innings: toInnings(feed, side),
 	};
 }

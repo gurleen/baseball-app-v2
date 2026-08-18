@@ -48,6 +48,15 @@ export function reduceGameEvent(snapshot: GameSnapshot | null, event: GameEvent)
 		case "boxscore":
 			return { ...snapshot, boxscore: event.boxscore };
 
+		case "abs":
+			return { ...snapshot, abs: event.abs };
+
+		case "decisions":
+			return { ...snapshot, decisions: event.decisions };
+
+		case "gameInfo":
+			return { ...snapshot, gameInfo: event.gameInfo };
+
 		case "heartbeat":
 			return snapshot;
 	}

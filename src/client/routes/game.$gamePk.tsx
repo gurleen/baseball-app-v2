@@ -1,21 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { Panel, Spinner, Tabs } from "@hydra-tv/ui"
-import { BaseState, CountDisplay, LineScore, Scoreboard } from "@hydra-tv/sports"
 import { z } from "zod"
 
 import { useGameStream } from "../game/useGameStream.ts"
-import { periodLabel } from "../game/adapters.ts"
+import { canShowAtBat } from "../game/adapters.ts"
 import { fullWidthColumn, scrollX } from "../lib/layout.ts"
+import { GameHeader } from "../components/GameHeader.tsx"
 import { AtBatTab } from "../components/AtBatTab.tsx"
 import { BoxScoreTab } from "../components/BoxScoreTab.tsx"
+import { PreviewTab } from "../components/PreviewTab.tsx"
+import { AbsTab } from "../components/AbsTab.tsx"
 import { SummaryTab } from "../components/SummaryTab.tsx"
 import { SettingsTab } from "../components/SettingsTab.tsx"
+import type { GameSnapshot } from "../../shared/models.ts"
 
-const TABS = ["AT BAT", "BATTING", "PITCHING", "SUMMARY", "SETTINGS"] as const
+const TABS = ["PREVIEW", "AT BAT", "OFFENSE", "PITCHING", "SUMMARY", "ABS", "SETTINGS"] as const
 type TabId = (typeof TABS)[number]
 
 const searchSchema = z.object({
-  tab: z.enum(TABS).optional(),
+  tab: z
+    .enum(["PREVIEW", "AT BAT", "OFFENSE", "BATTING", "PITCHING", "SUMMARY", "ABS", "SETTINGS"])
+    .optional()
+    .transform((value): TabId | undefined => (value === "BATTING" ? "OFFENSE" : value)),
 })
 
 export const Route = createFileRoute("/game/$gamePk")({
@@ -30,11 +36,6 @@ function GamePage() {
 
   const game = useGameStream(Number(gamePk))
   const snapshot = game.displayed
-
-  // Tab lives in the URL so a particular view is linkable — v1 kept it in
-  // component state, so you could never share "the pitching tab of this game".
-  const active: TabId = tab ?? "AT BAT"
-  const setTab = (next: TabId) => navigate({ search: { tab: next }, replace: true })
 
   // Only a failure with nothing to show is fatal. Once a snapshot has arrived,
   // a dropped socket keeps rendering the last known state behind a banner —
@@ -61,7 +62,10 @@ function GamePage() {
     )
   }
 
-  const { state, teams, linescore } = snapshot
+  const visible = visibleTabs(snapshot)
+  const fallback = defaultTab(snapshot)
+  const active: TabId = tab && visible.includes(tab) ? tab : fallback
+  const setTab = (next: TabId) => navigate({ search: { tab: next }, replace: true })
 
   return (
     <div style={{ ...fullWidthColumn, padding: "var(--sp-4)", gap: "var(--sp-3)" }}>
@@ -80,86 +84,45 @@ function GamePage() {
         </div>
       ) : null}
 
-      <div style={scrollX}>
-        <Scoreboard
-        away={{ abbr: teams.away.abbreviation, score: linescore.away.runs, name: teams.away.name }}
-        home={{ abbr: teams.home.abbreviation, score: linescore.home.runs, name: teams.home.name }}
-        period={periodLabel(snapshot)}
-        // Scoreboard renders FINAL/LIVE from `status`, so `detail` carries the
-        // situation line instead of repeating the status.
-        detail={
-          state.kind === "live"
-            ? `${state.outs} OUT · ${state.count.balls}-${state.count.strikes}`
-            : state.kind === "final"
-              ? snapshot.venue.name.toUpperCase()
-              : state.detail.toUpperCase()
-        }
-        status={state.kind === "live" ? "live" : state.kind === "final" ? "final" : "scheduled"}
-          size="lg"
-        >
-        {state.kind === "live" ? (
-          <BaseState
-            first={state.bases.first}
-            second={state.bases.second}
-            third={state.bases.third}
-            outs={state.outs}
-            size="sm"
-          />
-        ) : undefined}
-        </Scoreboard>
-      </div>
+      <GameHeader snapshot={snapshot} />
 
-      <div style={scrollX}>
-        <LineScore
-          away={{
-            abbr: teams.away.abbreviation,
-            innings: linescore.away.innings,
-            runs: linescore.away.runs,
-            hits: linescore.away.hits,
-            errors: linescore.away.errors,
-          }}
-          home={{
-            abbr: teams.home.abbreviation,
-            innings: linescore.home.innings,
-            runs: linescore.home.runs,
-            hits: linescore.home.hits,
-            errors: linescore.home.errors,
-          }}
-          innings={linescore.scheduledInnings}
-          currentInning={linescore.currentInning ?? undefined}
-        />
-      </div>
-
-      <div>
-        <div style={scrollX}>
-          <Tabs tabs={[...TABS]} active={TABS.indexOf(active)} onChange={index => setTab(TABS[index]!)} />
-        </div>
-        <div style={{ marginTop: "var(--sp-3)" }}>
-          {active === "AT BAT" && <AtBatTab snapshot={snapshot} />}
-          {active === "BATTING" && <BoxScoreTab snapshot={snapshot} preset="batting" />}
-          {active === "PITCHING" && <BoxScoreTab snapshot={snapshot} preset="pitching" />}
-          {active === "SUMMARY" && <SummaryTab snapshot={snapshot} />}
-          {active === "SETTINGS" && <SettingsTab game={game} />}
-        </div>
-      </div>
-
-      {state.kind === "live" ? (
-        <div
-          style={{
-            display: "flex",
-            gap: "var(--sp-4)",
-            alignItems: "center",
-            flexWrap: "wrap",
-            color: "var(--fg-3)",
-            fontSize: "var(--fs-10)",
-          }}
-        >
-          <CountDisplay balls={state.count.balls} strikes={state.count.strikes} outs={state.outs} horizontal size="sm" />
+      {(game.delayMs > 0 || game.paused || game.queued > 0) && snapshot.state.kind === "live" ? (
+        <div style={{ display: "flex", gap: "var(--sp-3)", flexWrap: "wrap", color: "var(--fg-3)", fontSize: "var(--fs-10)" }}>
           {game.delayMs > 0 ? <span>DELAY {(game.delayMs / 1000).toFixed(1)}s</span> : null}
           {game.paused ? <span style={{ color: "var(--warn)" }}>PAUSED</span> : null}
           {game.queued > 0 ? <span>{game.queued} QUEUED</span> : null}
         </div>
       ) : null}
+
+      <div>
+        <div style={scrollX}>
+          <Tabs tabs={visible} active={visible.indexOf(active)} onChange={index => setTab(visible[index]!)} />
+        </div>
+        <div style={{ marginTop: "var(--sp-3)" }}>
+          {active === "PREVIEW" && <PreviewTab snapshot={snapshot} />}
+          {active === "AT BAT" && <AtBatTab snapshot={snapshot} />}
+          {active === "OFFENSE" && <BoxScoreTab snapshot={snapshot} preset="batting" />}
+          {active === "PITCHING" && <BoxScoreTab snapshot={snapshot} preset="pitching" />}
+          {active === "SUMMARY" && <SummaryTab snapshot={snapshot} />}
+          {active === "ABS" && <AbsTab snapshot={snapshot} />}
+          {active === "SETTINGS" && <SettingsTab game={game} />}
+        </div>
+      </div>
     </div>
   )
+}
+
+function visibleTabs(snapshot: GameSnapshot): TabId[] {
+  return TABS.filter(tab => {
+    if (tab === "AT BAT") return canShowAtBat(snapshot)
+    if (tab === "ABS") return snapshot.abs !== null
+    return true
+  })
+}
+
+function defaultTab(snapshot: GameSnapshot): TabId {
+  if (snapshot.state.kind === "preview") return "PREVIEW"
+  if (snapshot.state.kind === "final") return "SUMMARY"
+  if (canShowAtBat(snapshot)) return "AT BAT"
+  return "PREVIEW"
 }

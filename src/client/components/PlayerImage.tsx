@@ -3,5 +3,13 @@ export function playerPhotoUrl(playerId: number): string {
 }
 
 export function PlayerImage({ playerId, size = 64 }: { playerId: number; size?: number }) {
-  return <img src={playerPhotoUrl(playerId)} alt="" width={size} height={size} />
+  return (
+    <img
+      src={playerPhotoUrl(playerId)}
+      alt=""
+      width={size}
+      height={size}
+      style={{ objectFit: "contain", flexShrink: 0 }}
+    />
+  )
 }

@@ -1,4 +1,7 @@
 import type {
+	AbsChallengeState,
+	GameDecisions,
+	GameInfo,
 	GameSnapshot,
 	GameState,
 	Linescore,
@@ -35,6 +38,9 @@ export type GameEvent =
 	| { t: "linescore"; linescore: Linescore }
 	| { t: "state"; state: GameState }
 	| { t: "boxscore"; boxscore: { home: TeamBox; away: TeamBox } }
+	| { t: "abs"; abs: AbsChallengeState | null }
+	| { t: "decisions"; decisions: GameDecisions | null }
+	| { t: "gameInfo"; gameInfo: GameInfo }
 	/** Keeps the socket warm and lets the client detect a stalled feed. */
 	| { t: "heartbeat"; at: number };
 

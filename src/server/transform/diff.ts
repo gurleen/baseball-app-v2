@@ -49,6 +49,15 @@ export function diffSnapshots(previous: GameSnapshot | null, next: GameSnapshot)
 	if (!shallowEqual(previous.boxscore, next.boxscore)) {
 		events.push({ t: "boxscore", boxscore: next.boxscore });
 	}
+	if (!shallowEqual(previous.abs, next.abs)) {
+		events.push({ t: "abs", abs: next.abs });
+	}
+	if (!shallowEqual(previous.decisions, next.decisions)) {
+		events.push({ t: "decisions", decisions: next.decisions });
+	}
+	if (!shallowEqual(previous.gameInfo, next.gameInfo)) {
+		events.push({ t: "gameInfo", gameInfo: next.gameInfo });
+	}
 
 	return events;
 }

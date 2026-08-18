@@ -1,4 +1,12 @@
-import type { GameSnapshot, Pitch, PlaySummary, TeamRef } from "../../shared/models.ts";
+import type {
+	BattingLine,
+	GameSnapshot,
+	Pitch,
+	PitchingLine,
+	PlaySummary,
+	TeamBox,
+	TeamRef,
+} from "../../shared/models.ts";
 
 // ============================================================
 // Projections from our domain models onto @hydra-tv/sports props.
@@ -198,4 +206,122 @@ export function periodLabel(snapshot: GameSnapshot): string {
 	}
 
 	return `${state.halfInning === "top" ? "TOP" : "BOT"} ${state.inning}`;
+}
+
+/** The at-bat in progress, or the last completed one between innings / after the final out. */
+export function displayedPlay(snapshot: GameSnapshot) {
+	return snapshot.currentPlay ?? snapshot.plays.at(-1) ?? null;
+}
+
+export function canShowAtBat(snapshot: GameSnapshot): boolean {
+	const play = displayedPlay(snapshot);
+	return play !== null && snapshot.players[play.batterId] !== undefined;
+}
+
+export function offenseSide(snapshot: GameSnapshot): "home" | "away" | null {
+	const half = snapshot.currentPlay?.halfInning ?? snapshot.state.halfInning;
+	if (!half) return null;
+	return half === "top" ? "away" : "home";
+}
+
+export function findBattingLine(snapshot: GameSnapshot, playerId: number): BattingLine | undefined {
+	for (const side of ["away", "home"] as const) {
+		const box = snapshot.boxscore[side];
+		const found = box.batting.find(line => line.playerId === playerId) ?? box.bench.find(line => line.playerId === playerId);
+		if (found) return found;
+	}
+	return undefined;
+}
+
+export function findPitchingLine(snapshot: GameSnapshot, playerId: number): PitchingLine | undefined {
+	for (const side of ["away", "home"] as const) {
+		const box = snapshot.boxscore[side];
+		const found =
+			box.pitching.find(line => line.playerId === playerId) ?? box.bullpen.find(line => line.playerId === playerId);
+		if (found) return found;
+	}
+	return undefined;
+}
+
+export function probablePitcherLine(snapshot: GameSnapshot, side: "home" | "away"): PitchingLine | undefined {
+	const id = snapshot.probablePitchers[side];
+	if (id !== null) return findPitchingLine(snapshot, id) ?? snapshot.boxscore[side].pitching[0];
+	return snapshot.boxscore[side].pitching[0];
+}
+
+function linesById(box: TeamBox): Map<number, BattingLine> {
+	return new Map([...box.batting, ...box.bench].map(line => [line.playerId, line]));
+}
+
+/** Current 1–9, batting-spot order. `line` is missing only if the player is not yet in the box. */
+export function currentLineup(box: TeamBox): { slot: number; playerId: number; line: BattingLine | undefined }[] {
+	const byId = linesById(box);
+	if (box.battingOrder.length > 0) {
+		return box.battingOrder.map((playerId, index) => ({
+			slot: index + 1,
+			playerId,
+			line: byId.get(playerId),
+		}));
+	}
+
+	return box.batting
+		.filter(line => line.battingOrder !== null)
+		.sort((left, right) => (left.battingOrder ?? 0) - (right.battingOrder ?? 0))
+		.map(line => ({ slot: line.battingOrder ?? 0, playerId: line.playerId, line }));
+}
+
+/** Opening-day 1–9; falls back to the current order if starters are not marked. */
+export function startingLineup(box: TeamBox): { slot: number; playerId: number; line: BattingLine | undefined }[] {
+	const starters = box.batting
+		.filter(line => line.starter && line.battingOrder !== null)
+		.sort((left, right) => (left.battingOrder ?? 0) - (right.battingOrder ?? 0))
+		.map(line => ({ slot: line.battingOrder ?? 0, playerId: line.playerId, line }));
+
+	return starters.length > 0 ? starters : currentLineup(box);
+}
+
+export function batterSlash(line: BattingLine): string {
+	if (line.avg === "-" && line.obp === "-" && line.slg === "-") return "";
+	return `${line.avg}/${line.obp}/${line.slg}`;
+}
+
+export interface AbsChallengeRow {
+	playId: string;
+	inning: number;
+	halfInning: "top" | "bottom";
+	batterId: number;
+	callName: string;
+	callCode: string;
+	zone: number | null;
+	type: string | null;
+	velocity: number | null;
+	isOverturned: boolean;
+}
+
+/** Pitches (completed + current) that went to an automated-ball-strike review. */
+export function absChallengeRows(snapshot: GameSnapshot): AbsChallengeRow[] {
+	const plays: Array<{ inning: number; halfInning: "top" | "bottom"; batterId: number; pitches: Pitch[] }> = [
+		...snapshot.plays,
+		...(snapshot.currentPlay ? [snapshot.currentPlay] : []),
+	];
+
+	const rows: AbsChallengeRow[] = [];
+	for (const play of plays) {
+		for (const pitch of play.pitches) {
+			if (!pitch.absReview) continue;
+			rows.push({
+				playId: pitch.playId,
+				inning: play.inning,
+				halfInning: play.halfInning,
+				batterId: play.batterId,
+				callName: pitch.call.name,
+				callCode: pitch.call.code,
+				zone: pitch.zone,
+				type: pitch.type?.code ?? null,
+				velocity: pitch.velocity?.start ?? null,
+				isOverturned: pitch.absReview.isOverturned,
+			});
+		}
+	}
+	return rows;
 }

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+	absChallengeRows,
+	canShowAtBat,
+	currentLineup,
 	periodLabel,
 	toPlayByPlayRows,
 	toSequencePitches,
@@ -157,5 +160,26 @@ describe("periodLabel", () => {
 	test("marks the break between halves", () => {
 		const between = { ...snapshot, state: { ...snapshot.state, kind: "live" as const, inning: 7, halfInning: "top" as const, inningState: "Middle" } };
 		expect(periodLabel(between)).toBe("MIDDLE 7");
+	});
+});
+
+describe("lineup and ABS projections", () => {
+	test("current lineup follows battingOrder", () => {
+		const lineup = currentLineup(snapshot.boxscore.home);
+		expect(lineup.length).toBeGreaterThan(0);
+		expect(lineup[0]!.slot).toBe(1);
+		expect(lineup.every((row, index) => row.slot === index + 1 || snapshot.boxscore.home.battingOrder.length === 0)).toBe(true);
+	});
+
+	test("a finished game still has an at-bat to show", () => {
+		expect(canShowAtBat(snapshot)).toBe(true);
+	});
+
+	test("ABS rows come from pitches that went to review", () => {
+		const rows = absChallengeRows(snapshot);
+		for (const row of rows) {
+			expect(row.batterId).toBeGreaterThan(0);
+			expect(row.inning).toBeGreaterThan(0);
+		}
 	});
 });

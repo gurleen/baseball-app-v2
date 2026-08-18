@@ -4,6 +4,8 @@ import { parsePlayerKey } from "./players.ts";
 
 // Row keys below match @hydra-tv/sports' BoxScore "batting" / "pitching"
 // presets exactly, so a TeamBox can be handed to the component untouched.
+// Extra season fields ride along for Preview / matchup cards and are ignored
+// by the preset columns.
 
 /** MLB returns rate stats as strings ("​.315", "3.42") and sometimes omits them. */
 function rate(value: string | number | undefined, fallback = "-"): string {
@@ -13,6 +15,10 @@ function rate(value: string | number | undefined, fallback = "-"): string {
 
 function count(value: number | undefined): number {
 	return value ?? 0;
+}
+
+function summary(value: string | undefined): string | null {
+	return value && value.length > 0 ? value : null;
 }
 
 /**
@@ -32,12 +38,13 @@ function parseBattingOrder(order: string | undefined) {
 
 function toBattingLine(entry: BoxscorePlayer): BattingLine {
 	const batting = entry.stats.batting;
+	const season = entry.seasonStats.batting;
 	const { spot, starter } = parseBattingOrder(entry.battingOrder);
 
 	return {
 		playerId: entry.person.id,
 		name: entry.person.fullName,
-		position: entry.position?.abbreviation ?? null,
+		position: entry.position?.abbreviation ?? entry.allPositions?.at(-1)?.abbreviation ?? null,
 		starter,
 		battingOrder: spot,
 		ab: count(batting.atBats),
@@ -47,12 +54,19 @@ function toBattingLine(entry: BoxscorePlayer): BattingLine {
 		bb: count(batting.baseOnBalls),
 		so: count(batting.strikeOuts),
 		lob: count(batting.leftOnBase),
-		avg: rate(entry.seasonStats.batting.avg),
+		avg: rate(season.avg),
+		obp: rate(season.obp),
+		slg: rate(season.slg),
+		ops: rate(season.ops),
+		hr: count(season.homeRuns),
+		seasonRbi: count(season.rbi),
+		summary: summary(batting.summary),
 	};
 }
 
 function toPitchingLine(entry: BoxscorePlayer, isStarter: boolean): PitchingLine {
 	const pitching = entry.stats.pitching;
+	const season = entry.seasonStats.pitching;
 
 	return {
 		playerId: entry.person.id,
@@ -67,8 +81,27 @@ function toPitchingLine(entry: BoxscorePlayer, isStarter: boolean): PitchingLine
 		hr: count(pitching.homeRuns),
 		pitches: count(pitching.numberOfPitches ?? pitching.pitchesThrown),
 		strikes: count(pitching.strikes),
-		era: rate(entry.seasonStats.pitching.era),
+		era: rate(season.era),
+		wins: count(season.wins),
+		losses: count(season.losses),
+		whip: rate(season.whip),
+		seasonSo: count(season.strikeOuts),
+		seasonIp: rate(season.inningsPitched, "0.0"),
+		bbPer9: rate(season.walksPer9Inn),
+		summary: summary(pitching.summary),
 	};
+}
+
+function lookup(byId: Map<number, BoxscorePlayer>, ids: number[]): BoxscorePlayer[] {
+	const seen = new Set<number>();
+	const out: BoxscorePlayer[] = [];
+	for (const id of ids) {
+		if (seen.has(id)) continue;
+		seen.add(id);
+		const entry = byId.get(id);
+		if (entry) out.push(entry);
+	}
+	return out;
 }
 
 function toTeamBox(side: BoxscoreTeamData): TeamBox {
@@ -80,16 +113,25 @@ function toTeamBox(side: BoxscoreTeamData): TeamBox {
 
 	// `batters` and `pitchers` are already in appearance order, which is the
 	// order a box score reads in — so no sorting is applied here.
-	const batting = side.batters
-		.map(id => byId.get(id))
-		.filter((entry): entry is BoxscorePlayer => entry !== undefined)
-		.map(toBattingLine);
+	const batterIds = [...side.batters];
+	for (const id of side.battingOrder) {
+		if (!batterIds.includes(id)) batterIds.push(id);
+	}
+	const batting = lookup(byId, batterIds).map(toBattingLine);
 
 	const [starterId] = side.pitchers;
-	const pitching = side.pitchers
-		.map(id => byId.get(id))
-		.filter((entry): entry is BoxscorePlayer => entry !== undefined)
-		.map(entry => toPitchingLine(entry, entry.person.id === starterId));
+	const pitching = lookup(byId, side.pitchers).map(entry => toPitchingLine(entry, entry.person.id === starterId));
+
+	const appearedBatterIds = new Set(batting.map(line => line.playerId));
+	const appearedPitcherIds = new Set(pitching.map(line => line.playerId));
+
+	const bench = lookup(byId, side.bench)
+		.filter(entry => !appearedBatterIds.has(entry.person.id))
+		.map(toBattingLine);
+
+	const bullpen = lookup(byId, side.bullpen)
+		.filter(entry => !appearedPitcherIds.has(entry.person.id))
+		.map(entry => toPitchingLine(entry, false));
 
 	const teamBatting = side.teamStats.batting;
 	const teamPitching = side.teamStats.pitching;
@@ -106,6 +148,12 @@ function toTeamBox(side: BoxscoreTeamData): TeamBox {
 			so: count(teamBatting.strikeOuts),
 			lob: count(teamBatting.leftOnBase),
 			avg: rate(teamBatting.avg),
+			obp: rate(teamBatting.obp),
+			slg: rate(teamBatting.slg),
+			ops: rate(teamBatting.ops),
+			hr: count(teamBatting.homeRuns),
+			seasonRbi: count(teamBatting.rbi),
+			summary: summary(teamBatting.summary),
 		},
 		pitchingTotals: {
 			ip: rate(teamPitching.inningsPitched, "0.0"),
@@ -118,7 +166,17 @@ function toTeamBox(side: BoxscoreTeamData): TeamBox {
 			pitches: count(teamPitching.numberOfPitches ?? teamPitching.pitchesThrown),
 			strikes: count(teamPitching.strikes),
 			era: rate(teamPitching.era),
+			wins: count(teamPitching.wins),
+			losses: count(teamPitching.losses),
+			whip: rate(teamPitching.whip),
+			seasonSo: count(teamPitching.strikeOuts),
+			seasonIp: rate(teamPitching.inningsPitched, "0.0"),
+			bbPer9: rate(teamPitching.walksPer9Inn),
+			summary: summary(teamPitching.summary),
 		},
+		battingOrder: side.battingOrder,
+		bench,
+		bullpen,
 	};
 }
 

@@ -29,6 +29,8 @@ export function toPlayers(feed: GumboFeed): Record<number, PlayerProfile> {
 		players[id] = {
 			id,
 			fullName: person.fullName,
+			useName: person.useName,
+			lastName: person.lastName,
 			shortName: person.boxscoreName,
 			jerseyNumber: boxscore?.jerseyNumber || person.primaryNumber || null,
 			position: boxscore?.position?.abbreviation ?? person.primaryPosition.abbreviation ?? null,
