@@ -1,11 +1,12 @@
 import { Panel } from "@hydra-tv/ui"
-import { PlayerCard, StatLine } from "@hydra-tv/sports"
+import { PlayerCard } from "@hydra-tv/sports"
 
 import type { GameSnapshot } from "../../shared/models.ts"
 import { probablePitcherLine, startingLineup } from "../game/adapters.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted, numeric, table, td, th } from "../lib/table.ts"
 import { PlayerImage, playerPhotoUrl } from "./PlayerImage.tsx"
+import { StatTable } from "./StatTable.tsx"
 import { TeamLogo } from "./TeamLogo.tsx"
 
 export function PreviewTab({ snapshot }: { snapshot: GameSnapshot }) {
@@ -52,8 +53,7 @@ function PreviewTeam({ snapshot, side }: { snapshot: GameSnapshot; side: "home" 
               style={{ minWidth: 0 }}
             />
             {starter ? (
-              <StatLine
-                stacked
+              <StatTable
                 items={[
                   { label: "W-L", value: `${starter.wins}-${starter.losses}` },
                   { label: "ERA", value: starter.era },
