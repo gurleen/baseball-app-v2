@@ -4,6 +4,7 @@ import type { GameSnapshot } from "../../shared/models.ts"
 import { absChallengeRows } from "../game/adapters.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted, numeric, table, td, th } from "../lib/table.ts"
+import { data } from "../lib/type.ts"
 import { TeamLogo } from "./TeamLogo.tsx"
 
 export function AbsTab({ snapshot }: { snapshot: GameSnapshot }) {
@@ -93,7 +94,7 @@ function ChallengeCard({ snapshot, side }: { snapshot: GameSnapshot; side: "home
 function Count({ value, label, accent }: { value: number; label: string; accent?: string }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: "var(--fs-16)", fontWeight: 800, color: accent }}>{value}</div>
+      <div style={{ ...data, fontSize: "var(--fs-16)", fontWeight: 800, color: accent }}>{value}</div>
       <div style={muted}>{label.toUpperCase()}</div>
     </div>
   )

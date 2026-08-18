@@ -5,6 +5,7 @@ import { BaseState, CountDisplay, PlayerCard } from "@hydra-tv/sports"
 import type { ScheduleGame, SchedulePlayer, ScheduleTeam } from "../../server/procedures/schedule.ts"
 import { formatTime } from "../lib/date.ts"
 import { shrinkable } from "../lib/layout.ts"
+import { data, typeLabel } from "../lib/type.ts"
 import { playerPhotoUrl } from "./PlayerImage.tsx"
 import { TeamLogo } from "./TeamLogo.tsx"
 
@@ -34,11 +35,13 @@ const teamGrid: CSSProperties = {
 }
 
 const rhe: CSSProperties = {
+  ...data,
   textAlign: "center",
   fontVariantNumeric: "tabular-nums",
 }
 
 const label: CSSProperties = {
+  fontFamily: "var(--font-label)",
   fontSize: "var(--fs-10)",
   color: "var(--fg-3)",
   letterSpacing: "0.04em",
@@ -55,7 +58,7 @@ export function GameCard({ game }: { game: ScheduleGame }) {
   return (
     <Link to="/game/$gamePk" params={{ gamePk: String(game.gamePk) }} style={card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "var(--sp-2)" }}>
-        <span style={{ fontWeight: 700, fontSize: "var(--fs-12)" }}>{statusLabel(game)}</span>
+        <span style={{ ...typeLabel, fontWeight: 700, fontSize: "var(--fs-12)" }}>{statusLabel(game)}</span>
       </div>
 
       <div style={divider} />

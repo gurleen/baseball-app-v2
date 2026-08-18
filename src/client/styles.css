@@ -23,3 +23,12 @@
   --color-ch-3: var(--ch-3);
   --color-ch-4: var(--ch-4);
 }
+
+:root {
+  --font-sans: "Univers Next Pro", "IBM Plex Sans", system-ui, sans-serif;
+  --font-copy: var(--font-sans);
+}
+
+body {
+  font-family: var(--font-copy);
+}

@@ -11,6 +11,7 @@ import {
 } from "../game/adapters.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted } from "../lib/table.ts"
+import { data, typeLabel } from "../lib/type.ts"
 import { playerPhotoUrl } from "./PlayerImage.tsx"
 import { TeamLogo } from "./TeamLogo.tsx"
 
@@ -60,7 +61,7 @@ export function GameHeader({ snapshot }: { snapshot: GameSnapshot }) {
         </div>
 
         {state.kind === "final" ? (
-          <div style={{ fontSize: "var(--fs-16)", fontWeight: 800, letterSpacing: "0.08em", textAlign: "center" }}>
+          <div style={{ ...typeLabel, fontSize: "var(--fs-16)", fontWeight: 800, letterSpacing: "0.08em", textAlign: "center" }}>
             FINAL
           </div>
         ) : (
@@ -73,7 +74,7 @@ export function GameHeader({ snapshot }: { snapshot: GameSnapshot }) {
               gap: "var(--sp-4)",
             }}
           >
-            <span style={{ fontWeight: 700, letterSpacing: "0.06em" }}>{periodLabel(snapshot) || state.detail.toUpperCase()}</span>
+            <span style={{ ...typeLabel, fontWeight: 700, letterSpacing: "0.06em" }}>{periodLabel(snapshot) || state.detail.toUpperCase()}</span>
             {live ? (
               <BaseState
                 first={state.bases.first}
@@ -131,6 +132,7 @@ function TeamScoreRow({ side, snapshot }: { side: "home" | "away"; snapshot: Gam
       </div>
       <div
         style={{
+          ...data,
           flexShrink: 0,
           fontSize: "2.25rem",
           fontWeight: 800,

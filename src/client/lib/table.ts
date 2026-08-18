@@ -3,6 +3,7 @@ import type { CSSProperties } from "react"
 export const table: CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
+  fontFamily: "var(--font-data)",
   fontSize: "var(--fs-11)",
   textAlign: "left",
 }
