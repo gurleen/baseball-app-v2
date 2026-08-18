@@ -194,6 +194,7 @@ describe("replay mode is self-consistent", () => {
 		expect(games).toHaveLength(1);
 		expect(games[0]!.gamePk).toBe(GAME_PK);
 		expect(games[0]!.teams.home.abbreviation).toBeTruthy();
+		expect(games[0]!.teams.home.shortName).toBeTruthy();
 
 		websocket.close();
 	}, 30_000);

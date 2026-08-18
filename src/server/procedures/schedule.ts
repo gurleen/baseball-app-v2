@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { getSchedule } from "../mlb/schedule.ts";
 import { replayMode } from "../mlb/replay.ts";
-import { toHalfInning } from "../transform/state.ts";
+import { toScheduleGameFromMlb } from "../transform/schedule.ts";
 import type { HalfInning } from "../../shared/models.ts";
 
 const ScheduleInput = z.object({
@@ -14,22 +14,60 @@ const ScheduleInput = z.object({
 		.optional(),
 });
 
+export interface SchedulePlayer {
+	id: number;
+	lastName: string;
+	/** Season line — starting pitchers and the live matchup. */
+	statsSummary: string | null;
+	/** Game log line — decisions and due-up. */
+	gameSummary: string | null;
+}
+
 export interface ScheduleTeam {
 	id: number;
 	name: string;
+	shortName: string;
 	abbreviation: string;
 	score: number | null;
+	hits: number | null;
+	errors: number | null;
 	record: string | null;
+	probablePitcher: SchedulePlayer | null;
+}
+
+export interface ScheduleSituation {
+	balls: number;
+	strikes: number;
+	outs: number;
+	bases: { first: boolean; second: boolean; third: boolean };
+	pitcher: SchedulePlayer | null;
+	batter: SchedulePlayer | null;
+	onDeck: SchedulePlayer | null;
+	inHole: SchedulePlayer | null;
+}
+
+export interface ScheduleDecisions {
+	winner: SchedulePlayer | null;
+	loser: SchedulePlayer | null;
+	save: SchedulePlayer | null;
 }
 
 export interface ScheduleGame {
 	gamePk: number;
 	startsAt: string;
-	status: { detail: string; isFinal: boolean; isLive: boolean; isPreview: boolean };
+	status: {
+		detail: string;
+		isFinal: boolean;
+		isLive: boolean;
+		isPreview: boolean;
+		isWarmup: boolean;
+	};
 	teams: { home: ScheduleTeam; away: ScheduleTeam };
 	venue: string | null;
 	/** Only meaningful once a game is underway. */
 	inning: { number: number; half: HalfInning | null; state: string | null } | null;
+	situation: ScheduleSituation | null;
+	decisions: ScheduleDecisions | null;
 }
 
 export const scheduleRouter = {
@@ -44,49 +82,6 @@ export const scheduleRouter = {
 
 		const response = await getSchedule({ date: input.date, signal });
 
-		return response.dates.flatMap(date =>
-			date.games.map((game): ScheduleGame => {
-				const code = game.status.abstractGameCode;
-				const linescore = game.linescore;
-
-				return {
-					gamePk: game.gamePk,
-					startsAt: game.gameDate,
-					status: {
-						detail: game.status.detailedState,
-						isFinal: code === "F",
-						isLive: code === "L",
-						isPreview: code === "P",
-					},
-					teams: {
-						home: toScheduleTeam(game.teams.home),
-						away: toScheduleTeam(game.teams.away),
-					},
-					venue: game.venue?.name ?? null,
-					inning: linescore?.currentInning
-						? {
-								number: linescore.currentInning,
-								half: toHalfInning(linescore.inningHalf),
-								state: linescore.inningState ?? null,
-							}
-						: null,
-				};
-			}),
-		);
+		return response.dates.flatMap(date => date.games.map(toScheduleGameFromMlb));
 	}),
 };
-
-type ScheduleSide = Awaited<ReturnType<typeof getSchedule>>["dates"][number]["games"][number]["teams"]["home"];
-
-function toScheduleTeam(side: ScheduleSide): ScheduleTeam {
-	const record = side.leagueRecord ? `${side.leagueRecord.wins}-${side.leagueRecord.losses}` : null;
-
-	return {
-		id: side.team.id,
-		name: side.team.name ?? "",
-		// Requires the `team` hydrate, which getSchedule requests by default.
-		abbreviation: side.team.abbreviation ?? "",
-		score: side.score ?? null,
-		record,
-	};
-}

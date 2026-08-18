@@ -1,13 +1,12 @@
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { Button, Panel, Spinner } from "@hydra-tv/ui"
-import { Scoreboard, inningLabel } from "@hydra-tv/sports"
 import { z } from "zod"
 
 import { orpc } from "../rpc/client.ts"
-import { formatTime, shiftDate, today } from "../lib/date.ts"
+import { shiftDate, today } from "../lib/date.ts"
 import { fullWidthColumn, responsiveColumns, shrinkable } from "../lib/layout.ts"
-import type { ScheduleGame } from "../../server/procedures/schedule.ts"
+import { GameCard } from "../components/GameCard.tsx"
 
 const searchSchema = z.object({
   date: z
@@ -78,7 +77,7 @@ function SchedulePage() {
           <div style={{ color: "var(--fg-3)" }}>No games scheduled.</div>
         ) : (
           <div
-            style={{ ...responsiveColumns(320), gap: "var(--sp-3)" }}
+            style={{ ...responsiveColumns(380), gap: "var(--sp-3)" }}
           >
             {query.data.map(game => (
               <GameCard key={game.gamePk} game={game} />
@@ -88,52 +87,4 @@ function SchedulePage() {
       </Panel>
     </div>
   )
-}
-
-function GameCard({ game }: { game: ScheduleGame }) {
-  const period = gamePeriodLabel(game)
-
-  return (
-    <Link to="/game/$gamePk" params={{ gamePk: String(game.gamePk) }} style={{ textDecoration: "none" }}>
-      <Scoreboard
-        away={{
-          abbr: game.teams.away.abbreviation || game.teams.away.name,
-          score: game.teams.away.score ?? 0,
-          record: game.teams.away.record ?? undefined,
-        }}
-        home={{
-          abbr: game.teams.home.abbreviation || game.teams.home.name,
-          score: game.teams.home.score ?? 0,
-          record: game.teams.home.record ?? undefined,
-        }}
-        period={period}
-        detail={game.venue ?? undefined}
-        status={game.status.isLive ? "live" : game.status.isFinal ? "final" : "scheduled"}
-      />
-    </Link>
-  )
-}
-
-/**
- * The label above the score. Scoreboard already renders FINAL/LIVE from
- * `status`, so a finished game only adds an inning when it went to extras —
- * otherwise the card reads "FINAL" twice.
- */
-function gamePeriodLabel(game: ScheduleGame): string {
-  if (game.status.isPreview) return formatTime(game.startsAt)
-
-  // Scoreboard renders "FINAL" from `status`, so this only adds the inning
-  // count when the game went past regulation.
-  if (game.status.isFinal) {
-    return game.inning && game.inning.number > 9 ? `${game.inning.number} INN` : ""
-  }
-
-  if (game.inning) {
-    // "Middle"/"End" mean between halves, when no batter is up.
-    const { state, number, half } = game.inning
-    if (state === "Middle" || state === "End") return `${state.toUpperCase()} ${number}`
-    return inningLabel(number, half ?? undefined)
-  }
-
-  return game.status.detail.toUpperCase()
 }

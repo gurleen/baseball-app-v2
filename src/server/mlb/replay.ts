@@ -2,7 +2,7 @@ import type { WatcherDeps } from "../game/watcher.ts";
 import type { ScheduleGame } from "../procedures/schedule.ts";
 import { GumboFeed as GumboFeedSchema, type GumboFeed } from "./schemas/gumbo.ts";
 import { SavantGameFeed } from "./schemas/savant.ts";
-import { toHalfInning } from "../transform/state.ts";
+import { toScheduleGameFromGumbo } from "../transform/schedule.ts";
 
 /**
  * Feed implementations backed by recorded fixtures instead of MLB.
@@ -73,7 +73,7 @@ export async function createReplayMode(options: ReplayOptions): Promise<ReplayMo
 	return {
 		label: options.label,
 		gamePk: feed.gamePk,
-		scheduleGame: toScheduleGame(feed),
+		scheduleGame: toScheduleGameFromGumbo(feed),
 		deps: {
 			fetchGumbo: async () => feedAt(cursor),
 			fetchGumboDiff: async () => {
@@ -84,46 +84,6 @@ export async function createReplayMode(options: ReplayOptions): Promise<ReplayMo
 			},
 			fetchSavant: async () => savant,
 		},
-	};
-}
-
-function toScheduleGame(feed: GumboFeed): ScheduleGame {
-	const code = feed.gameData.status.abstractGameCode;
-	const linescore = feed.liveData.linescore;
-
-	return {
-		gamePk: feed.gamePk,
-		startsAt: feed.gameData.datetime.dateTime,
-		status: {
-			detail: feed.gameData.status.detailedState,
-			isFinal: code === "F",
-			isLive: code === "L",
-			isPreview: code === "P",
-		},
-		teams: {
-			home: {
-				id: feed.gameData.teams.home.id,
-				name: feed.gameData.teams.home.name,
-				abbreviation: feed.gameData.teams.home.abbreviation,
-				score: linescore.teams.home.runs ?? null,
-				record: null,
-			},
-			away: {
-				id: feed.gameData.teams.away.id,
-				name: feed.gameData.teams.away.name,
-				abbreviation: feed.gameData.teams.away.abbreviation,
-				score: linescore.teams.away.runs ?? null,
-				record: null,
-			},
-		},
-		venue: feed.gameData.venue.name,
-		inning: linescore.currentInning
-			? {
-					number: linescore.currentInning,
-					half: toHalfInning(linescore.inningHalf),
-					state: linescore.inningState ?? null,
-				}
-			: null,
 	};
 }
 

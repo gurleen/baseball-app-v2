@@ -181,6 +181,7 @@ export const ScheduleLinescoreOffense = z.object({
 	inHole: ScheduleOffensePlayer.optional(),
 	first: ScheduleOffensePlayer.optional(),
 	second: ScheduleOffensePlayer.optional(),
+	third: ScheduleOffensePlayer.optional(),
 	pitcher: ScheduleProbablePitcher.optional(),
 	battingOrder: z.number().optional(),
 	team: TeamRef.optional(),
