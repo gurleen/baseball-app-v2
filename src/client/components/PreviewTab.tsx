@@ -4,7 +4,7 @@ import { PlayerCard } from "@hydra-tv/sports"
 import type { GameSnapshot } from "../../shared/models.ts"
 import { probablePitcherLine, startingLineup } from "../game/adapters.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
-import { muted, numeric, table, td, th } from "../lib/table.ts"
+import { muted, numeric, stripedRow, table, td, th } from "../lib/table.ts"
 import { PlayerImage, playerPhotoUrl } from "./PlayerImage.tsx"
 import { StatTable } from "./StatTable.tsx"
 import { TeamLogo } from "./TeamLogo.tsx"
@@ -94,11 +94,11 @@ function PreviewTeam({ snapshot, side }: { snapshot: GameSnapshot; side: "home" 
                 </td>
               </tr>
             ) : (
-              lineup.map(({ slot, playerId, line }) => {
+              lineup.map(({ slot, playerId, line }, index) => {
                 const profile = snapshot.players[playerId]
                 const hands = profile ? `${profile.batSide ?? "—"}/${profile.pitchHand ?? "—"}` : "—"
                 return (
-                  <tr key={playerId}>
+                  <tr key={playerId} style={stripedRow(index)}>
                     <td style={{ ...td, ...numeric, fontWeight: 700 }}>{slot}</td>
                     <td style={td}>
                       <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", minWidth: 0 }}>

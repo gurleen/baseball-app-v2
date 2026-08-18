@@ -32,3 +32,7 @@ export const muted: CSSProperties = {
   fontSize: "var(--fs-10)",
   letterSpacing: "0.04em",
 }
+
+export function stripedRow(index: number): CSSProperties | undefined {
+  return index % 2 === 1 ? { background: "var(--bg-3)" } : undefined
+}
