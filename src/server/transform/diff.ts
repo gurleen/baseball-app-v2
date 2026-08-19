@@ -24,9 +24,10 @@ export function diffSnapshots(previous: GameSnapshot | null, next: GameSnapshot)
 			continue;
 		}
 
-		// Statcast metrics land seconds after the pitch itself, so a pitch we
-		// already sent can still gain metrics later.
-		if (!before.metrics && pitch.metrics) {
+		// Statcast metrics land seconds after the pitch itself, and ABS
+		// miss-by can fill in on a later poll once the review resolves, so
+		// any metrics change is forwarded — not only null → present.
+		if (pitch.metrics && !shallowEqual(before.metrics, pitch.metrics)) {
 			events.push({ t: "pitchMetrics", playId: pitch.playId, metrics: pitch.metrics });
 		}
 	}

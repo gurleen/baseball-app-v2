@@ -143,6 +143,37 @@ describe("pitch transform", () => {
 			expect(pitch.metrics!.swing!.batSpeed).toBeGreaterThan(0);
 		}
 	});
+
+	test("ABS challenge pitches carry Savant edge distance", async () => {
+		const snapshot = await snapshotFor("live");
+		const challenged = [...iteratePitches(snapshot)].filter(pitch => pitch.absReview);
+
+		expect(challenged.length).toBeGreaterThan(0);
+		expect(challenged.every(pitch => pitch.absReview!.reviewType === "MJ")).toBe(true);
+		expect(challenged.every(pitch => pitch.metrics?.abs?.edgeDistance != null)).toBe(true);
+
+		for (const pitch of challenged) {
+			expect(pitch.metrics!.abs!.edgeDistance).toBeGreaterThan(0);
+			expect(pitch.metrics!.abs!.edgeDistance).toBeLessThan(2);
+		}
+	});
+
+	test("GUMBO-only snapshots still attach ABS reviews without Statcast miss-by", async () => {
+		const gumbo = await loadGumboFixture("live");
+		const snapshot = toGameSnapshot(gumbo, null, FIXED_NOW);
+		const challenged = [...iteratePitches(snapshot)].filter(pitch => pitch.absReview);
+
+		expect(challenged.length).toBeGreaterThan(0);
+		expect(challenged.every(pitch => pitch.metrics === null)).toBe(true);
+		expect(challenged.every(pitch => pitch.absReview!.reviewType === "MJ")).toBe(true);
+	});
+
+	test("manager reviews are not attached as ABS on pitches", async () => {
+		const snapshot = await snapshotFor("final");
+		for (const pitch of iteratePitches(snapshot)) {
+			if (pitch.absReview) expect(pitch.absReview.reviewType).toBe("MJ");
+		}
+	});
 });
 
 describe("play actions", () => {
@@ -400,6 +431,41 @@ describe("diff / reduce round-trip", () => {
 		expect(metricEvents).toHaveLength(1);
 		expect(metricEvents[0]).toMatchObject({ t: "pitchMetrics", playId: target!.playId });
 
+		expect(reduceGameEvents(previous, events)).toEqual(next);
+	});
+
+	test("updated Statcast ABS miss-by arrives as pitchMetrics", async () => {
+		const next = await snapshotFor("live");
+		const target = [...iteratePitches(next)].find(pitch => pitch.metrics?.abs?.edgeDistance != null);
+		expect(target).toBeDefined();
+
+		const previous: GameSnapshot = {
+			...next,
+			plays: next.plays.map(play => ({
+				...play,
+				pitches: play.pitches.map(pitch =>
+					pitch.playId === target!.playId && pitch.metrics?.abs
+						? { ...pitch, metrics: { ...pitch.metrics, abs: { ...pitch.metrics.abs, edgeDistance: null } } }
+						: pitch,
+				),
+			})),
+			currentPlay: next.currentPlay
+				? {
+						...next.currentPlay,
+						pitches: next.currentPlay.pitches.map(pitch =>
+							pitch.playId === target!.playId && pitch.metrics?.abs
+								? { ...pitch, metrics: { ...pitch.metrics, abs: { ...pitch.metrics.abs, edgeDistance: null } } }
+								: pitch,
+						),
+					}
+				: null,
+		};
+
+		const events = diffSnapshots(previous, next);
+		const metricEvents = events.filter(event => event.t === "pitchMetrics");
+
+		expect(metricEvents).toHaveLength(1);
+		expect(metricEvents[0]).toMatchObject({ t: "pitchMetrics", playId: target!.playId });
 		expect(reduceGameEvents(previous, events)).toEqual(next);
 	});
 

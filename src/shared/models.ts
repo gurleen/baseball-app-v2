@@ -53,10 +53,23 @@ export interface PlayerProfile {
  * pitches (which show up as low bat speeds, ~3-44mph) — while batted-ball
  * metrics exist only on contact. Roughly 53 of 343 pitches in a game have
  * batted-ball data; ~182 have a tracked swing.
+ *
+ * ABS challenge tracking (`abs`) is a third, independent channel: called
+ * balls and strikes that go to review usually have neither a swing nor
+ * contact, so a pitch can carry `abs` alone.
  */
 export interface PitchMetrics {
 	swing: SwingMetrics | null;
 	battedBall: BattedBallMetrics | null;
+	abs: AbsChallengeMetrics | null;
+}
+
+/** Statcast's official ABS miss-by and who challenged. */
+export interface AbsChallengeMetrics {
+	/** Feet to the ABS zone edge. Null while the review is still in progress. */
+	edgeDistance: number | null;
+	isBatter: boolean | null;
+	challengerType: string | null;
 }
 
 export interface SwingMetrics {

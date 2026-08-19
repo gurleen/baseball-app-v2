@@ -35,6 +35,24 @@ const boolish = z
 	});
 
 /**
+ * Official ABS challenge tracking on a Savant pitch row. `edge_distance` is
+ * feet from the ball to the 3D zone edge — the "missed by" number the
+ * broadcast graphic shows.
+ */
+export const SavantAbsChallenge = z.looseObject({
+	is_batter: boolish,
+	is_in_progress: boolish,
+	is_overturned: boolish,
+	challenge_team_id: numeric,
+	edge_distance: numeric,
+	edge_distance_calc: numeric,
+	challenging_player_id: numeric,
+	challenging_player_type: z.string().nullish(),
+});
+
+export type SavantAbsChallenge = z.infer<typeof SavantAbsChallenge>;
+
+/**
  * One pitch as Savant sees it. Rows in `team_home`/`team_away` are pitches;
  * rows in `exit_velocity` are the subset that were put in play, carrying the
  * extra batted-ball fields.
@@ -75,6 +93,8 @@ export const SavantPitchRow = z.looseObject({
 	breakZ: numeric,
 	is_abs_challenge: boolish,
 	isSword: boolish,
+	/** Nested ABS challenge tracking — present on challenged pitches in ABS games. */
+	abs_challenge: SavantAbsChallenge.nullish(),
 
 	// Batted-ball metrics — only on `exit_velocity` rows, and string-encoded.
 	hit_speed: numeric,

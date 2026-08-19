@@ -1,11 +1,17 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+	absCallLabel,
 	absChallengeRows,
 	canShowAtBat,
 	currentLineup,
+	formatMissBy,
+	formatMissDirection,
 	formatZoneBounds,
+	meanZoneBounds,
+	missDirection,
 	periodLabel,
+	toAbsZonePitches,
 	toPlayByPlayRows,
 	toPlayLog,
 	toPitchMixBars,
@@ -15,6 +21,7 @@ import {
 	toSportsResult,
 	toSprayBalls,
 	toStrikeZonePitches,
+	umpCallLabel,
 	zoneBounds,
 } from "../src/client/game/adapters.ts";
 import { toGameSnapshot } from "../src/server/transform/snapshot.ts";
@@ -246,5 +253,42 @@ describe("lineup and ABS projections", () => {
 			expect(row.batterId).toBeGreaterThan(0);
 			expect(row.inning).toBeGreaterThan(0);
 		}
+	});
+
+	test("ABS rows carry location and Statcast miss-by", () => {
+		const rows = absChallengeRows(snapshot);
+		expect(rows.length).toBeGreaterThan(0);
+		expect(rows.every(row => row.location !== null)).toBe(true);
+		expect(rows.every(row => row.edgeDistance != null && row.edgeDistance > 0)).toBe(true);
+		expect(toAbsZonePitches(rows)).toHaveLength(rows.length);
+		const bounds = meanZoneBounds(rows);
+		expect(bounds.zoneTop).toBeGreaterThan(bounds.zoneBottom!);
+	});
+});
+
+describe("ABS miss-by helpers", () => {
+	test("formatMissBy converts Statcast feet to inches", () => {
+		expect(formatMissBy(0.025)).toBe('0.30"');
+		expect(formatMissBy(null)).toBeUndefined();
+		expect(formatMissBy(undefined)).toBeUndefined();
+	});
+
+	test("missDirection reports high/low/inside/outside from catcher's view", () => {
+		const zone = { top: 3.5, bottom: 1.5 };
+		expect(missDirection({ x: 0, z: 4 }, zone, "R")).toBe("high");
+		expect(missDirection({ x: 0, z: 1 }, zone, "R")).toBe("low");
+		expect(missDirection({ x: 1.2, z: 2.5 }, zone, "R")).toBe("outside");
+		expect(missDirection({ x: -1.2, z: 2.5 }, zone, "R")).toBe("inside");
+		expect(missDirection({ x: 1.2, z: 2.5 }, zone, "L")).toBe("inside");
+		expect(missDirection({ x: -1.2, z: 2.5 }, zone, "L")).toBe("outside");
+		expect(formatMissDirection("high")).toBe("HIGH");
+		expect(missDirection(null, zone, "R")).toBeNull();
+	});
+
+	test("ABS call flips the ump call when the challenge is overturned", () => {
+		expect(umpCallLabel("C", "Called Strike")).toBe("Called Strike");
+		expect(absCallLabel("C", "Called Strike", false)).toBe("Called Strike");
+		expect(absCallLabel("C", "Called Strike", true)).toBe("Called Ball");
+		expect(absCallLabel("B", "Ball", true)).toBe("Called Strike");
 	});
 });
