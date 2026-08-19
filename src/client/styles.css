@@ -33,3 +33,13 @@ body {
   font-family: var(--font-copy);
   font-size: var(--fs-13);
 }
+
+/* Keep overflow scrolling; hide the native scrollbar. Inline styles cannot
+   target ::-webkit-scrollbar, so this has to be a class. */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

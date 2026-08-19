@@ -22,5 +22,10 @@ export function responsiveColumns(minPx: number): CSSProperties {
 /** Applied to each grid item so it can shrink and scroll internally. */
 export const shrinkable: CSSProperties = { minWidth: 0 };
 
-/** Wraps content wider than the viewport, e.g. a linescore or a box score. */
-export const scrollX: CSSProperties = { overflowX: "auto", minWidth: 0 };
+/**
+ * Wraps content wider than the viewport, e.g. a linescore or a box score.
+ * `overflowY: hidden` is required: setting only `overflowX` makes the other
+ * axis compute to `auto`, which lets a 1px-taller child become a vertical
+ * drag surface on mobile.
+ */
+export const scrollX: CSSProperties = { overflowX: "auto", overflowY: "hidden", minWidth: 0 };

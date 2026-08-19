@@ -97,8 +97,13 @@ function GamePage() {
       ) : null}
 
       <div>
-        <div style={scrollX}>
-          <Tabs tabs={visible} active={visible.indexOf(active)} onChange={index => setTab(visible[index]!)} />
+        <div className="hide-scrollbar" style={{ ...scrollX, touchAction: "pan-x" }}>
+          <Tabs
+            tabs={visible}
+            active={visible.indexOf(active)}
+            onChange={index => setTab(visible[index]!)}
+            style={{ whiteSpace: "nowrap", width: "max-content" }}
+          />
         </div>
         <div style={{ marginTop: "var(--sp-3)" }}>
           {active === "PREVIEW" && <PreviewTab snapshot={snapshot} />}
