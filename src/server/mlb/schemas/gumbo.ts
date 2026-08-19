@@ -851,8 +851,11 @@ export const HitData = z.object({
 export type HitData = z.infer<typeof HitData>;
 
 export const PitchTypeInfo = z.object({
-  /** Pitch type code — see /api/v1/pitchTypes */
-  code: z.string(),
+  /**
+   * Pitch type code — see /api/v1/pitchTypes. Omitted on unclassified
+   * pitches, which arrive as `{ description: "Unknown" }` with no code.
+   */
+  code: z.string().optional(),
   description: z.string(),
 });
 export type PitchTypeInfo = z.infer<typeof PitchTypeInfo>;

@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import { loadGumboFixture, loadSavantFixture } from "./fixtures.ts";
-import { indexSavantPitches } from "../src/server/mlb/schemas/savant.ts";
+import { PitchTypeInfo } from "../src/server/mlb/schemas/gumbo.ts";
+import { indexSavantPitches, type SavantPitchRow } from "../src/server/mlb/schemas/savant.ts";
 import { toGameSnapshot } from "../src/server/transform/snapshot.ts";
+import { toPitch } from "../src/server/transform/pitch.ts";
 import { diffSnapshots, iteratePitches } from "../src/server/transform/diff.ts";
 import { toPitchMixByPitcher, toSeasonPitchMix } from "../src/server/transform/pitchMix.ts";
 import { reduceGameEvents } from "../src/client/game/reducer.ts";
@@ -142,6 +144,25 @@ describe("pitch transform", () => {
 		for (const pitch of tracked) {
 			expect(pitch.metrics!.swing!.batSpeed).toBeGreaterThan(0);
 		}
+	});
+
+	test("unclassified GUMBO pitches omit type.code and fall through to Savant", async () => {
+		expect(PitchTypeInfo.parse({ description: "Unknown" }).code).toBeUndefined();
+
+		const gumbo = await loadGumboFixture("live");
+		const play = gumbo.liveData.plays.allPlays.find(entry =>
+			entry.playEvents.some(event => event.isPitch && event.playId),
+		)!;
+		const event = play.playEvents.find(entry => entry.isPitch && entry.playId)!;
+		const unknown = {
+			...event,
+			details: { ...event.details, type: { description: "Unknown" } },
+		};
+
+		expect(toPitch(play, unknown, 0, undefined)?.type).toBeNull();
+		expect(
+			toPitch(play, unknown, 0, { pitch_type: "SL", pitch_name: "Slider" } as SavantPitchRow)?.type,
+		).toEqual({ code: "SL", name: "Slider" });
 	});
 
 	test("ABS challenge pitches carry Savant edge distance", async () => {

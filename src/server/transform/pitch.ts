@@ -195,7 +195,7 @@ export function toPitch(
 			strikes: event.preCount?.strikes ?? asNumber(savant?.["pre_strikes"]) ?? event.count.strikes ?? 0,
 		},
 		outs: event.count.outs ?? 0,
-		type: event.details.type
+		type: event.details.type?.code
 			? { code: event.details.type.code, name: event.details.type.description }
 			: savant?.pitch_type
 				? { code: savant.pitch_type, name: savant.pitch_name ?? savant.pitch_type }
