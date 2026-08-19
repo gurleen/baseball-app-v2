@@ -7,6 +7,7 @@ import {
 	formatZoneBounds,
 	periodLabel,
 	toPlayByPlayRows,
+	toPlayLog,
 	toPitchMixBars,
 	formatPitchMixBarValue,
 	formatPitchMixBarSpeed,
@@ -134,7 +135,7 @@ describe("PitchMix projection", () => {
 
 describe("PlayByPlay projection", () => {
 	test("inserts an inning marker whenever the half changes", () => {
-		const rows = toPlayByPlayRows(snapshot.plays);
+		const rows = toPlayByPlayRows(snapshot);
 		const markers = rows.filter(row => row.kind === "period");
 
 		expect(markers.length).toBeGreaterThan(10);
@@ -144,17 +145,40 @@ describe("PlayByPlay projection", () => {
 	});
 
 	test("attributes plays to the batting side and marks scoring plays", () => {
-		const rows = toPlayByPlayRows(snapshot.plays).filter(row => row.kind !== "period");
+		const log = toPlayLog(snapshot);
+		const rows = toPlayByPlayRows(snapshot).filter(row => row.kind !== "period");
 
-		expect(rows.length).toBe(snapshot.plays.length);
+		expect(rows.length).toBe(log.length);
+		expect(log.length).toBeGreaterThan(snapshot.plays.length);
+
 		for (const [index, row] of rows.entries()) {
-			const play = snapshot.plays[index]!;
-			expect(row.team).toBe(play.halfInning === "top" ? "away" : "home");
-			if (play.isScoringPlay) {
+			const entry = log[index]!;
+			const halfInning = entry.kind === "play" ? entry.play.halfInning : entry.action.halfInning;
+			expect(row.team).toBe(halfInning === "top" ? "away" : "home");
+			if (entry.kind === "play" && entry.play.isScoringPlay) {
 				expect(row.kind).toBe("score");
 				expect(row.score).toMatch(/^\d+-\d+$/);
 			}
+			if (entry.kind === "action") {
+				expect(row.clock).toBeUndefined();
+				expect(row.text).toBe(entry.action.description);
+			}
 		}
+	});
+
+	test("lists nested actions before the plate appearance they belong to", async () => {
+		const live = toGameSnapshot(await loadGumboFixture("live"), await loadSavantFixture("live"), 0);
+		const log = toPlayLog(live);
+		const caught = log.findIndex(
+			entry => entry.kind === "action" && entry.action.eventType === "caught_stealing_2b",
+		);
+		const walk = log.findIndex(entry => entry.kind === "play" && entry.play.atBatIndex === 18);
+
+		expect(caught).toBeGreaterThan(-1);
+		expect(walk).toBeGreaterThan(caught);
+		expect(log.some(entry => entry.kind === "action" && entry.action.description === "Status Change - Pre-Game")).toBe(
+			true,
+		);
 	});
 });
 

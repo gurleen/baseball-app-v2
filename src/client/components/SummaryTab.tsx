@@ -2,7 +2,7 @@ import { Panel } from "@hydra-tv/ui"
 import { PlayByPlay, PlayerCard, SprayChart } from "@hydra-tv/sports"
 
 import type { GameSnapshot } from "../../shared/models.ts"
-import { findPitchingLine, toPlayByPlayRows, toSprayBalls } from "../game/adapters.ts"
+import { findPitchingLine, toPlayByPlayRows, toPlayLog, toSprayBalls } from "../game/adapters.ts"
 import { responsiveColumns, shrinkable } from "../lib/layout.ts"
 import { muted } from "../lib/table.ts"
 import { copy } from "../lib/type.ts"
@@ -22,8 +22,8 @@ export function SummaryTab({ snapshot }: { snapshot: GameSnapshot }) {
       ) : null}
 
       <div style={{ ...responsiveColumns(320), gap: "var(--sp-3)" }}>
-        <Panel style={shrinkable} title="PLAY BY PLAY" meta={`${snapshot.plays.length} at-bats`} padded={false}>
-          <PlayByPlay events={toPlayByPlayRows(snapshot.plays)} height={480} newestFirst />
+        <Panel style={shrinkable} title="PLAY BY PLAY" meta={`${toPlayLog(snapshot).length}`} padded={false}>
+          <PlayByPlay events={toPlayByPlayRows(snapshot)} height={480} newestFirst />
         </Panel>
 
         <Panel

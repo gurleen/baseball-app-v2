@@ -1,15 +1,17 @@
 import { useState } from "react"
 import { Panel, Switch } from "@hydra-tv/ui"
 
-import type { GameSnapshot, PlaySummary } from "../../shared/models.ts"
+import type { GameSnapshot } from "../../shared/models.ts"
+import type { PlayLogEntry } from "../game/adapters.ts"
+import { toPlayLog } from "../game/adapters.ts"
 import { shrinkable } from "../lib/layout.ts"
 import { muted } from "../lib/table.ts"
-import { PlayCard, hitFromPitches, playBadge } from "./PlayCard.tsx"
+import { PlayCard, actionBadge, hitFromPitches, playBadge } from "./PlayCard.tsx"
 
 export function PreviousPlays({ snapshot, height }: { snapshot: GameSnapshot; height?: number | string }) {
   const [scoringOnly, setScoringOnly] = useState(false)
-  const plays = [...snapshot.plays].reverse()
-  const filtered = scoringOnly ? plays.filter(play => play.isScoringPlay) : plays
+  const entries = [...toPlayLog(snapshot)].reverse()
+  const filtered = scoringOnly ? entries.filter(isScoringEntry) : entries
   const items = groupByHalf(filtered)
 
   return (
@@ -23,7 +25,7 @@ export function PreviousPlays({ snapshot, height }: { snapshot: GameSnapshot; he
     >
       {items.length === 0 ? (
         <div style={{ ...muted, textAlign: "center", padding: "var(--sp-4)" }}>
-          {scoringOnly ? "No scoring plays yet." : "No completed at-bats yet."}
+          {scoringOnly ? "No scoring plays yet." : "No plays yet."}
         </div>
       ) : (
         items.map(item =>
@@ -40,17 +42,25 @@ export function PreviousPlays({ snapshot, height }: { snapshot: GameSnapshot; he
             >
               {item.label}
             </div>
+          ) : item.entry.kind === "play" ? (
+            <PlayCard
+              key={`play-${item.entry.play.atBatIndex}`}
+              playerId={item.entry.play.batterId}
+              badge={playBadge(item.entry.play)}
+              scorecard={item.entry.play.scorecard}
+              description={item.entry.play.description || "No description available."}
+              pitches={item.entry.play.pitches}
+              scoring={item.entry.play.isScoringPlay}
+              hit={hitFromPitches(item.entry.play.pitches)}
+              expandable
+            />
           ) : (
             <PlayCard
-              key={item.play.atBatIndex}
-              playerId={item.play.batterId}
-              badge={playBadge(item.play)}
-              scorecard={item.play.scorecard}
-              description={item.play.description || "No description available."}
-              pitches={item.play.pitches}
-              scoring={item.play.isScoringPlay}
-              hit={hitFromPitches(item.play.pitches)}
-              expandable
+              key={`action-${item.entry.action.atBatIndex}-${item.entry.action.eventIndex}`}
+              playerId={item.entry.action.playerId ?? undefined}
+              badge={actionBadge(item.entry.action)}
+              description={item.entry.action.description || "No description available."}
+              scoring={item.entry.action.isScoringPlay}
             />
           ),
         )
@@ -59,19 +69,25 @@ export function PreviousPlays({ snapshot, height }: { snapshot: GameSnapshot; he
   )
 }
 
-type ListItem = { kind: "inning"; id: string; label: string } | { kind: "play"; play: PlaySummary }
+type ListItem = { kind: "inning"; id: string; label: string } | { kind: "entry"; entry: PlayLogEntry }
 
-function groupByHalf(plays: PlaySummary[]): ListItem[] {
+function isScoringEntry(entry: PlayLogEntry): boolean {
+  return entry.kind === "play" ? entry.play.isScoringPlay : entry.action.isScoringPlay
+}
+
+function groupByHalf(entries: PlayLogEntry[]): ListItem[] {
   const items: ListItem[] = []
   let previous = ""
 
-  for (const play of plays) {
-    const label = `${play.halfInning === "top" ? "TOP" : "BOT"} ${play.inning}`
+  for (const entry of entries) {
+    const halfInning = entry.kind === "play" ? entry.play.halfInning : entry.action.halfInning
+    const inning = entry.kind === "play" ? entry.play.inning : entry.action.inning
+    const label = `${halfInning === "top" ? "TOP" : "BOT"} ${inning}`
     if (label !== previous) {
-      items.push({ kind: "inning", id: `inning-${play.halfInning}-${play.inning}`, label })
+      items.push({ kind: "inning", id: `inning-${halfInning}-${inning}`, label })
       previous = label
     }
-    items.push({ kind: "play", play })
+    items.push({ kind: "entry", entry })
   }
 
   return items
