@@ -312,6 +312,15 @@ describe("linescore", () => {
 		const homeSum = home.innings.reduce<number>((sum, v) => sum + (typeof v === "number" ? v : 0), 0);
 		expect(homeSum).toBe(home.runs);
 	});
+
+	test("carries mound visits remaining and ABS remaining from GUMBO", async () => {
+		const snapshot = await snapshotFor("live");
+
+		expect(snapshot.linescore.away.moundVisitsRemaining).toBe(1);
+		expect(snapshot.linescore.home.moundVisitsRemaining).toBe(2);
+		expect(snapshot.abs?.away.remaining).toBe(0);
+		expect(snapshot.abs?.home.remaining).toBe(1);
+	});
 });
 
 describe("boxscore", () => {

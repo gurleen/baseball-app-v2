@@ -219,6 +219,7 @@ export interface LinescoreSide {
 	hits: number;
 	errors: number;
 	leftOnBase: number;
+	/** `null` when GUMBO omits mound-visit tracking (pregame, some minors). */
 	moundVisitsRemaining: number | null;
 	innings: InningRuns[];
 }
