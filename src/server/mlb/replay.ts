@@ -83,6 +83,7 @@ export async function createReplayMode(options: ReplayOptions): Promise<ReplayMo
 				return rest;
 			},
 			fetchSavant: async () => savant,
+			fetchPitcherSeasonMix: async () => [],
 		},
 	};
 }

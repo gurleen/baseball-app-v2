@@ -117,12 +117,14 @@ export interface Pitch {
 	metrics: PitchMetrics | null;
 }
 
-/** In-game pitch-type usage for one pitcher, computed server-side. */
+/** Pitch-type usage for one pitcher — in-game or full-season. */
 export interface PitchMixEntry {
 	code: string;
 	label: string;
 	count: number;
 	percent: number;
+	/** Mean release velo in mph, or null when no tracked pitches. */
+	averageSpeed: number | null;
 }
 
 export interface AbsReview {
@@ -330,6 +332,8 @@ export interface GameSnapshot {
 	gameInfo: GameInfo;
 	/** In-game pitch-type usage, keyed by pitcher id. Recomputed server-side each tick. */
 	pitchMixByPitcher: Record<number, PitchMixEntry[]>;
+	/** Full-season arsenal, keyed by pitcher id. Fetched once when a pitcher appears. */
+	seasonPitchMixByPitcher: Record<number, PitchMixEntry[]>;
 	/** Epoch ms when the server built this snapshot. */
 	updatedAt: number;
 }

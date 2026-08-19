@@ -9,6 +9,7 @@ import {
 	toPlayByPlayRows,
 	toPitchMixBars,
 	formatPitchMixBarValue,
+	formatPitchMixBarSpeed,
 	toSequencePitches,
 	toSportsResult,
 	toSprayBalls,
@@ -109,19 +110,25 @@ describe("PitchSequence projection", () => {
 describe("PitchMix projection", () => {
 	test("maps server mix entries onto BarChart rows with short codes and data-viz colors", () => {
 		const bars = toPitchMixBars([
-			{ code: "FF", label: "4-Seam Fastball", count: 44, percent: 44 },
-			{ code: "SL", label: "Slider", count: 27, percent: 27 },
+			{ code: "FF", label: "4-Seam Fastball", count: 44, percent: 44, averageSpeed: 96.2 },
+			{ code: "SL", label: "Slider", count: 27, percent: 27, averageSpeed: null },
 		]);
 
 		expect(bars).toEqual([
-			{ label: "FF", value: 44, count: 44, color: "var(--ch-1)" },
-			{ label: "SL", value: 27, count: 27, color: "var(--ch-2)" },
+			{ label: "FF", value: 44, count: 44, color: "var(--ch-1)", averageSpeed: 96.2 },
+			{ label: "SL", value: 27, count: 27, color: "var(--ch-2)", averageSpeed: null },
 		]);
 	});
 
 	test("formats the value column with percent and pitch count", () => {
-		const bar = toPitchMixBars([{ code: "FF", label: "4-Seam", count: 51, percent: 57 }])[0]!;
+		const bar = toPitchMixBars([{ code: "FF", label: "4-Seam", count: 51, percent: 57, averageSpeed: 96.198 }])[0]!;
 		expect(formatPitchMixBarValue(bar)).toBe("57% · 51");
+		expect(formatPitchMixBarSpeed(bar)).toBe("96.2");
+	});
+
+	test("formats a missing speed as empty", () => {
+		const bar = toPitchMixBars([{ code: "UN", label: "Unknown", count: 1, percent: 100, averageSpeed: null }])[0]!;
+		expect(formatPitchMixBarSpeed(bar)).toBe("");
 	});
 });
 

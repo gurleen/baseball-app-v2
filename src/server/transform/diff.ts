@@ -34,6 +34,9 @@ export function diffSnapshots(previous: GameSnapshot | null, next: GameSnapshot)
 	if (!shallowEqual(previous.pitchMixByPitcher, next.pitchMixByPitcher)) {
 		events.push({ t: "pitchMix", pitchMixByPitcher: next.pitchMixByPitcher });
 	}
+	if (!shallowEqual(previous.seasonPitchMixByPitcher, next.seasonPitchMixByPitcher)) {
+		events.push({ t: "seasonPitchMix", seasonPitchMixByPitcher: next.seasonPitchMixByPitcher });
+	}
 
 	// Completed at-bats.
 	const previousPlays = new Set(previous.plays.map(play => play.atBatIndex));

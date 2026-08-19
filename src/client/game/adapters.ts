@@ -105,6 +105,7 @@ export interface PitchMixBar {
 	value: number;
 	count: number;
 	color: string;
+	averageSpeed: number | null;
 }
 
 /** Maps server-computed mix onto BarChart props. Labels use type codes so they always fit. */
@@ -114,12 +115,19 @@ export function toPitchMixBars(entries: PitchMixEntry[]): PitchMixBar[] {
 		value: entry.percent,
 		count: entry.count,
 		color: PITCH_MIX_COLORS[index % PITCH_MIX_COLORS.length]!,
+		averageSpeed: entry.averageSpeed,
 	}));
 }
 
 /** Formats the value column as "44% · 27". */
 export function formatPitchMixBarValue(bar: PitchMixBar): string {
 	return `${bar.value}% · ${bar.count}`;
+}
+
+/** Formats mean velo as "96.2", or empty when the type has no tracked speed. */
+export function formatPitchMixBarSpeed(bar: PitchMixBar): string {
+	if (bar.averageSpeed == null) return "";
+	return bar.averageSpeed.toFixed(1);
 }
 
 /**

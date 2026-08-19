@@ -26,6 +26,7 @@ function stubDeps() {
 			calls.savant += 1;
 			return savant;
 		},
+		fetchPitcherSeasonMix: async () => [],
 		now: () => 1_700_000_000_000,
 	};
 

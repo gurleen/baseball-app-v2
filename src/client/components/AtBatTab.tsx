@@ -2,7 +2,7 @@ import { Panel } from "@hydra-tv/ui"
 import { PitchSequence } from "@hydra-tv/sports"
 
 import type { GameSnapshot, LivePlay, PlaySummary } from "../../shared/models.ts"
-import { currentLineup, displayedPlay, formatZoneBounds, offenseSide, toPitchMixBars, zoneBounds } from "../game/adapters.ts"
+import { currentLineup, displayedPlay, formatZoneBounds, offenseSide, zoneBounds } from "../game/adapters.ts"
 import { usePitchHover } from "../game/usePitchHover.ts"
 import { responsiveColumns, scrollX, shrinkable } from "../lib/layout.ts"
 import { muted, numeric, table, td, th } from "../lib/table.ts"
@@ -21,8 +21,7 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
   const batter = play ? snapshot.players[play.batterId] : undefined
   const pitcher = play ? snapshot.players[play.pitcherId] : undefined
   const mix = play ? snapshot.pitchMixByPitcher[play.pitcherId] ?? [] : []
-  const mixBars = toPitchMixBars(mix)
-  const mixTotal = mix.reduce((sum, entry) => sum + entry.count, 0)
+  const seasonMix = play ? snapshot.seasonPitchMixByPitcher[play.pitcherId] ?? [] : []
   const last = pitches.at(-1)
   const completed = play != null && isCompletedPlay(play)
   const showResult = play != null && (completed || last?.call.isInPlay === true)
@@ -73,19 +72,14 @@ export function AtBatTab({ snapshot }: { snapshot: GameSnapshot }) {
             onFocus={hover.onSequenceFocus}
           />
         </div>
-        {mixBars.length > 0 ? (
+        {mix.length > 0 || seasonMix.length > 0 ? (
           <div
             style={{
               borderTop: "1px solid var(--line-2)",
               padding: "var(--sp-3)",
             }}
           >
-            {pitcher ? (
-              <div style={{ ...muted, fontSize: "var(--fs-10)", marginBottom: "var(--sp-2)", fontWeight: 700 }}>
-                {pitcher.shortName} · {mixTotal} P
-              </div>
-            ) : null}
-            <PitchMixChart bars={mixBars} />
+            <PitchMixChart today={mix} season={seasonMix} pitcherName={pitcher?.shortName} />
           </div>
         ) : null}
       </Panel>

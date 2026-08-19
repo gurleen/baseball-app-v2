@@ -1,13 +1,15 @@
 import { applyPatch, type Operation } from "fast-json-patch";
 
 import type { GameEvent } from "../../shared/events.ts";
-import type { GameSnapshot } from "../../shared/models.ts";
+import type { GameSnapshot, PitchMixEntry } from "../../shared/models.ts";
 import { isAbortError } from "../mlb/errors.ts";
 import { getMlbGameFeed, getMlbGameFeedDiffPatch } from "../mlb/gumbo.ts";
+import { getPitcherPitchArsenal } from "../mlb/pitchMix.ts";
 import { getSavantGameFeed } from "../mlb/savant.ts";
 import type { GumboFeed } from "../mlb/schemas/gumbo.ts";
 import { indexSavantPitches, type SavantPitchRow } from "../mlb/schemas/savant.ts";
 import { diffSnapshots } from "../transform/diff.ts";
+import { toSeasonPitchMix } from "../transform/pitchMix.ts";
 import { toGameSnapshot } from "../transform/snapshot.ts";
 import { GameEventEmitter } from "./emitter.ts";
 
@@ -31,6 +33,11 @@ export interface WatcherDeps {
 	fetchGumbo: typeof getMlbGameFeed;
 	fetchGumboDiff: typeof getMlbGameFeedDiffPatch;
 	fetchSavant: typeof getSavantGameFeed;
+	fetchPitcherSeasonMix: (
+		personId: number,
+		season: string,
+		options?: { signal?: AbortSignal },
+	) => Promise<PitchMixEntry[]>;
 	now: () => number;
 }
 
@@ -38,12 +45,15 @@ const defaultDeps: WatcherDeps = {
 	fetchGumbo: getMlbGameFeed,
 	fetchGumboDiff: getMlbGameFeedDiffPatch,
 	fetchSavant: getSavantGameFeed,
+	fetchPitcherSeasonMix: async (personId, season, options) =>
+		toSeasonPitchMix(await getPitcherPitchArsenal(personId, season, options)),
 	now: () => Date.now(),
 };
 
 export interface WatcherStats {
 	gumboFetches: number;
 	savantFetches: number;
+	pitchMixFetches: number;
 	errors: number;
 	lastUpdatedAt: number | null;
 }
@@ -62,6 +72,9 @@ export class GameWatcher {
 	#feed: GumboFeed | null = null;
 	#savantIndex = new Map<string, SavantPitchRow>();
 	#snapshot: GameSnapshot | null = null;
+	#seasonMix = new Map<number, PitchMixEntry[]>();
+	#seasonMixInFlight = new Set<number>();
+	#seasonMixRetryAt = new Map<number, number>();
 
 	#gumboTimer: ReturnType<typeof setTimeout> | null = null;
 	#savantTimer: ReturnType<typeof setTimeout> | null = null;
@@ -72,7 +85,13 @@ export class GameWatcher {
 	/** Set once a Final game has had its last pass of both feeds. */
 	#settled = false;
 
-	readonly stats: WatcherStats = { gumboFetches: 0, savantFetches: 0, errors: 0, lastUpdatedAt: null };
+	readonly stats: WatcherStats = {
+		gumboFetches: 0,
+		savantFetches: 0,
+		pitchMixFetches: 0,
+		errors: 0,
+		lastUpdatedAt: null,
+	};
 
 	constructor(gamePk: number, deps: Partial<WatcherDeps> = {}) {
 		this.gamePk = gamePk;
@@ -246,12 +265,63 @@ export class GameWatcher {
 	#publish(): void {
 		if (!this.#feed) return;
 
-		const next = toGameSnapshot(this.#feed, this.#savantIndex, this.#deps.now());
+		const next: GameSnapshot = {
+			...toGameSnapshot(this.#feed, this.#savantIndex, this.#deps.now()),
+			seasonPitchMixByPitcher: Object.fromEntries(this.#seasonMix),
+		};
 		const events = diffSnapshots(this.#snapshot, next);
 
 		this.#snapshot = next;
 		this.stats.lastUpdatedAt = next.updatedAt;
 
 		if (events.length > 0) this.#emitter.emitAll(events);
+
+		this.#scheduleSeasonMix(next);
+	}
+
+	/** Pitchers who have appeared, plus the two probables so the first look isn't empty. */
+	#pitcherIdsForSeasonMix(snapshot: GameSnapshot): number[] {
+		const ids = new Set<number>();
+		if (snapshot.currentPlay) ids.add(snapshot.currentPlay.pitcherId);
+		for (const play of snapshot.plays) ids.add(play.pitcherId);
+		if (snapshot.probablePitchers.home) ids.add(snapshot.probablePitchers.home);
+		if (snapshot.probablePitchers.away) ids.add(snapshot.probablePitchers.away);
+		return [...ids];
+	}
+
+	#scheduleSeasonMix(snapshot: GameSnapshot): void {
+		if (!this.#running || !this.#feed) return;
+
+		const season = this.#feed.gameData.game.season;
+		const now = this.#deps.now();
+
+		for (const pitcherId of this.#pitcherIdsForSeasonMix(snapshot)) {
+			if (this.#seasonMix.has(pitcherId) || this.#seasonMixInFlight.has(pitcherId)) continue;
+			const retryAt = this.#seasonMixRetryAt.get(pitcherId);
+			if (retryAt != null && now < retryAt) continue;
+			void this.#fetchSeasonMix(pitcherId, season);
+		}
+	}
+
+	async #fetchSeasonMix(pitcherId: number, season: string): Promise<void> {
+		this.#seasonMixInFlight.add(pitcherId);
+		this.stats.pitchMixFetches += 1;
+
+		try {
+			const entries = await this.#deps.fetchPitcherSeasonMix(pitcherId, season, {
+				signal: this.#abort?.signal,
+			});
+			if (!this.#running) return;
+			this.#seasonMix.set(pitcherId, entries);
+			this.#seasonMixRetryAt.delete(pitcherId);
+			this.#publish();
+		} catch (error) {
+			if (isAbortError(error)) return;
+			this.stats.errors += 1;
+			console.warn(`[watcher ${this.gamePk}] season pitch mix fetch failed`, error);
+			this.#seasonMixRetryAt.set(pitcherId, this.#deps.now() + ERROR_BACKOFF_MS);
+		} finally {
+			this.#seasonMixInFlight.delete(pitcherId);
+		}
 	}
 }

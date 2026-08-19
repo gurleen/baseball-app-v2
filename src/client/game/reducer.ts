@@ -60,6 +60,9 @@ export function reduceGameEvent(snapshot: GameSnapshot | null, event: GameEvent)
 		case "pitchMix":
 			return { ...snapshot, pitchMixByPitcher: event.pitchMixByPitcher };
 
+		case "seasonPitchMix":
+			return { ...snapshot, seasonPitchMixByPitcher: event.seasonPitchMixByPitcher };
+
 		case "heartbeat":
 			return snapshot;
 	}

@@ -68,6 +68,7 @@ describe("GameWatcher", () => {
 				return rest;
 			},
 			fetchSavant: async () => liveSavant,
+			fetchPitcherSeasonMix: async () => [],
 			now: () => 1_700_000_000_000 + call,
 		});
 
@@ -99,6 +100,7 @@ describe("GameWatcher", () => {
 			fetchGumbo: async () => finalFeed,
 			fetchGumboDiff: async () => [],
 			fetchSavant: async () => liveSavant,
+			fetchPitcherSeasonMix: async () => [],
 		});
 
 		watcher.start();
@@ -130,6 +132,7 @@ describe("GameWatcher", () => {
 			fetchSavant: async () => {
 				throw new Error("savant is down");
 			},
+			fetchPitcherSeasonMix: async () => [],
 		});
 
 		watcher.start();
@@ -156,6 +159,8 @@ describe("GameWatcher", () => {
 			fetchGumbo: async () => liveFeed,
 			fetchGumboDiff: async () => [],
 			fetchSavant: async () => liveSavant,
+			// Leave in-flight so a mix delta cannot sneak in before stop().
+			fetchPitcherSeasonMix: () => new Promise(() => {}),
 		});
 
 		watcher.start();
@@ -166,5 +171,59 @@ describe("GameWatcher", () => {
 		watcher.stop();
 
 		expect((await pending).done).toBe(true);
+	});
+
+	test("fetches season mix once per pitcher and ships it as a delta", async () => {
+		const expected = toGameSnapshot(liveFeed, null, 0);
+		const expectedIds = new Set<number>();
+		if (expected.currentPlay) expectedIds.add(expected.currentPlay.pitcherId);
+		for (const play of expected.plays) expectedIds.add(play.pitcherId);
+		if (expected.probablePitchers.home) expectedIds.add(expected.probablePitchers.home);
+		if (expected.probablePitchers.away) expectedIds.add(expected.probablePitchers.away);
+
+		const mix = [{ code: "FF", label: "Four-seam FB", count: 120, percent: 48, averageSpeed: 96.2 }];
+		const calls: number[] = [];
+		const seasons: string[] = [];
+
+		const watcher = new GameWatcher(5, {
+			fetchGumbo: async () => liveFeed,
+			fetchGumboDiff: async () => [],
+			fetchSavant: async () => liveSavant,
+			fetchPitcherSeasonMix: async (personId, season) => {
+				calls.push(personId);
+				seasons.push(season);
+				return mix;
+			},
+		});
+
+		watcher.start();
+		const stream = watcher.subscribe();
+
+		const events = await collect(stream, list => {
+			const cached = watcher.snapshot?.seasonPitchMixByPitcher ?? {};
+			return (
+				list.some(event => event.t === "seasonPitchMix") && Object.keys(cached).length >= expectedIds.size
+			);
+		});
+
+		const firstMix = events.find(event => event.t === "seasonPitchMix");
+		expect(events[0]!.t).toBe("snapshot");
+		expect(firstMix).toBeDefined();
+
+		expect(new Set(calls)).toEqual(expectedIds);
+		expect(calls).toHaveLength(expectedIds.size);
+		expect(new Set(seasons)).toEqual(new Set([liveFeed.gameData.game.season]));
+		expect(watcher.stats.pitchMixFetches).toBe(expectedIds.size);
+
+		for (const pitcherId of expectedIds) {
+			expect(watcher.snapshot?.seasonPitchMixByPitcher[pitcherId]).toEqual(mix);
+		}
+
+		const before = calls.length;
+		await Bun.sleep(80);
+		expect(calls).toHaveLength(before);
+
+		await stream.return(undefined);
+		watcher.stop();
 	});
 });

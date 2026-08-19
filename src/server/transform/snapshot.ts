@@ -130,6 +130,7 @@ export function toGameSnapshot(
 		decisions: toDecisions(feed),
 		gameInfo: toGameInfo(feed),
 		pitchMixByPitcher: toPitchMixByPitcher(completedSummaries, livePlay),
+		seasonPitchMixByPitcher: {},
 		updatedAt: now,
 	};
 }

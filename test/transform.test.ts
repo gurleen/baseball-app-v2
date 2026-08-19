@@ -4,7 +4,7 @@ import { loadGumboFixture, loadSavantFixture } from "./fixtures.ts";
 import { indexSavantPitches } from "../src/server/mlb/schemas/savant.ts";
 import { toGameSnapshot } from "../src/server/transform/snapshot.ts";
 import { diffSnapshots, iteratePitches } from "../src/server/transform/diff.ts";
-import { toPitchMixByPitcher } from "../src/server/transform/pitchMix.ts";
+import { toPitchMixByPitcher, toSeasonPitchMix } from "../src/server/transform/pitchMix.ts";
 import { reduceGameEvents } from "../src/client/game/reducer.ts";
 import type { GameSnapshot } from "../src/shared/models.ts";
 
@@ -155,6 +155,7 @@ describe("pitch mix", () => {
 		expect(mix!.length).toBeGreaterThan(0);
 		expect(mix!.reduce((sum, entry) => sum + entry.percent, 0)).toBeGreaterThanOrEqual(99);
 		expect(mix!.reduce((sum, entry) => sum + entry.percent, 0)).toBeLessThanOrEqual(100);
+		expect(mix!.some(entry => entry.averageSpeed != null && entry.averageSpeed > 70)).toBe(true);
 	});
 
 	test("counts match a manual tally from the play log", async () => {
@@ -186,6 +187,61 @@ describe("pitch mix", () => {
 	test("toPitchMixByPitcher returns nothing for a pitcher who has not appeared", async () => {
 		const snapshot = await snapshotFor("final");
 		expect(toPitchMixByPitcher(snapshot.plays, snapshot.currentPlay)[999_999_999]).toBeUndefined();
+	});
+
+	test("snapshot defaults season mix to empty — the watcher overlays fetched arsenals", async () => {
+		const snapshot = await snapshotFor("live");
+		expect(snapshot.seasonPitchMixByPitcher).toEqual({});
+	});
+
+	test("toSeasonPitchMix converts 0–1 percentages and sorts by count", () => {
+		const mix = toSeasonPitchMix({
+			stats: [
+				{
+					splits: [
+						{
+							stat: {
+								percentage: 0.12350598,
+								count: 31,
+								type: { code: "SL", description: "Slider" },
+							},
+						},
+						{
+							stat: {
+								percentage: 0.47808766,
+								count: 120,
+								averageSpeed: 96.19834884166669,
+								type: { code: "FF", description: "Four-seam FB" },
+							},
+						},
+						{
+							stat: {
+								percentage: 0.23904383,
+								count: 60,
+								type: { code: "CU", description: "Curveball" },
+							},
+						},
+					],
+				},
+			],
+		});
+
+		expect(mix.map(entry => entry.code)).toEqual(["FF", "CU", "SL"]);
+		expect(mix[0]).toEqual({
+			code: "FF",
+			label: "Four-seam FB",
+			count: 120,
+			percent: 48,
+			averageSpeed: 96.19834884166669,
+		});
+		expect(mix[1]!.percent).toBe(24);
+		expect(mix[1]!.averageSpeed).toBeNull();
+		expect(mix[2]!.percent).toBe(12);
+	});
+
+	test("toSeasonPitchMix returns nothing for an empty arsenal payload", () => {
+		expect(toSeasonPitchMix({ stats: [] })).toEqual([]);
+		expect(toSeasonPitchMix({ stats: [{ splits: [] }] })).toEqual([]);
 	});
 });
 
@@ -323,6 +379,22 @@ describe("diff / reduce round-trip", () => {
 
 		const replayed = reduceGameEvents(previous, mixEvents);
 		expect(replayed!.pitchMixByPitcher).toEqual(next.pitchMixByPitcher);
+	});
+
+	test("seasonPitchMix delta alone updates the client view", async () => {
+		const next = await snapshotFor("live");
+		const pitcherId = next.currentPlay?.pitcherId ?? next.probablePitchers.home;
+		expect(pitcherId).toBeTruthy();
+
+		const seasonMix = [{ code: "FF", label: "Four-seam FB", count: 120, percent: 48, averageSpeed: 96.2 }];
+		const withSeason: GameSnapshot = {
+			...next,
+			seasonPitchMixByPitcher: { [pitcherId!]: seasonMix },
+		};
+
+		const events = diffSnapshots(next, withSeason);
+		expect(events).toEqual([{ t: "seasonPitchMix", seasonPitchMixByPitcher: withSeason.seasonPitchMixByPitcher }]);
+		expect(reduceGameEvents(next, events)).toEqual(withSeason);
 	});
 
 	test("abs, decisions and gameInfo ride their own events", async () => {
