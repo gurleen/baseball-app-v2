@@ -57,7 +57,6 @@ export function PreviousPlays({ snapshot, height }: { snapshot: GameSnapshot; he
           ) : (
             <PlayCard
               key={`action-${item.entry.action.atBatIndex}-${item.entry.action.eventIndex}`}
-              playerId={item.entry.action.playerId ?? undefined}
               badge={actionBadge(item.entry.action)}
               description={item.entry.action.description || "No description available."}
               scoring={item.entry.action.isScoringPlay}
