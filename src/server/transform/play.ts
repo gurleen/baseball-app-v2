@@ -1,9 +1,36 @@
 import type { Play } from "../mlb/schemas/gumbo.ts";
 import type { SavantPitchRow } from "../mlb/schemas/savant.ts";
-import type { LivePlay, PlaySummary } from "../../shared/models.ts";
+import type { LivePlay, PlayAction, PlaySummary } from "../../shared/models.ts";
 import { getScorecardCodeFromPlay } from "./scorecard.ts";
 import { toPitches } from "./pitch.ts";
 import { toHalfInning } from "./state.ts";
+
+export function toPlayActions(play: Play): PlayAction[] {
+	const inning = play.about.inning;
+	const halfInning = toHalfInning(play.about.halfInning) ?? "top";
+	const actions: PlayAction[] = [];
+
+	for (const eventIndex of play.actionIndex) {
+		const event = play.playEvents[eventIndex];
+		if (!event) continue;
+
+		actions.push({
+			atBatIndex: play.atBatIndex,
+			eventIndex,
+			inning,
+			halfInning,
+			eventType: event.details.eventType ?? null,
+			event: event.details.event ?? null,
+			description: event.details.description ?? event.details.event ?? event.details.eventType ?? "",
+			isScoringPlay: event.details.isScoringPlay ?? false,
+			isOut: event.details.isOut ?? false,
+			playerId: event.player?.id ?? null,
+			replacedPlayerId: event.replacedPlayer?.id ?? null,
+		});
+	}
+
+	return actions;
+}
 
 export function toPlaySummary(play: Play, savantByPlayId: Map<string, SavantPitchRow>): PlaySummary {
 	return {
@@ -23,6 +50,7 @@ export function toPlaySummary(play: Play, savantByPlayId: Map<string, SavantPitc
 		scorecard: getScorecardCodeFromPlay(play) || null,
 		scoreAfter: { home: play.result.homeScore, away: play.result.awayScore },
 		pitches: toPitches(play, savantByPlayId),
+		actions: toPlayActions(play),
 	};
 }
 
@@ -42,5 +70,6 @@ export function toLivePlay(
 		onDeckId,
 		description: play.result.description ?? null,
 		pitches: toPitches(play, savantByPlayId),
+		actions: toPlayActions(play),
 	};
 }

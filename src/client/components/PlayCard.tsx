@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react"
 import { Badge } from "@hydra-tv/ui"
 import { PitchSequence } from "@hydra-tv/sports"
 
-import type { Pitch, PlaySummary } from "../../shared/models.ts"
+import type { Pitch, PlayAction, PlaySummary } from "../../shared/models.ts"
 import { zoneBounds } from "../game/adapters.ts"
 import { usePitchHover } from "../game/usePitchHover.ts"
 import { scrollX } from "../lib/layout.ts"
@@ -164,4 +164,8 @@ export function hitFromPitches(pitches: Pitch[]) {
 
 export function playBadge(play: PlaySummary): string {
   return play.event ?? play.eventType ?? "Play"
+}
+
+export function actionBadge(action: PlayAction): string {
+  return action.event ?? action.eventType ?? "Play"
 }

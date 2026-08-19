@@ -145,6 +145,57 @@ describe("pitch transform", () => {
 	});
 });
 
+describe("play actions", () => {
+	function allActions(snapshot: GameSnapshot) {
+		return [...snapshot.plays.flatMap(play => play.actions), ...(snapshot.currentPlay?.actions ?? [])];
+	}
+
+	test("lifts every GUMBO actionIndex entry, including status changes", async () => {
+		const [gumbo, snapshot] = await Promise.all([loadGumboFixture("live"), snapshotFor("live")]);
+		const currentPlay = gumbo.liveData.plays.currentPlay;
+		const expected = gumbo.liveData.plays.allPlays
+			.filter(play => play.about.isComplete && play.atBatIndex !== currentPlay?.atBatIndex)
+			.flatMap(play => play.actionIndex.map(index => play.playEvents[index]).filter(event => event != null));
+		const liveExpected = (currentPlay?.actionIndex ?? [])
+			.map(index => currentPlay?.playEvents[index])
+			.filter(event => event != null);
+
+		const actions = allActions(snapshot);
+		expect(actions.length).toBe(expected.length + liveExpected.length);
+		expect(actions.some(action => action.description === "Status Change - Pre-Game")).toBe(true);
+		expect(actions.some(action => action.description === "Status Change - Warmup")).toBe(true);
+		expect(actions.some(action => action.description === "Status Change - In Progress")).toBe(true);
+	});
+
+	test("carries stolen-base-class, substitution, and ejection actions on the parent at-bat", async () => {
+		const snapshot = await snapshotFor("live");
+
+		const caughtStealing = snapshot.plays.find(play => play.atBatIndex === 18);
+		expect(caughtStealing?.eventType).toBe("walk");
+		expect(caughtStealing?.actions.map(action => action.eventType)).toContain("caught_stealing_2b");
+		expect(caughtStealing?.actions.some(action => /caught stealing/i.test(action.description))).toBe(true);
+
+		const wildPitch = snapshot.plays.find(play => play.atBatIndex === 19);
+		expect(wildPitch?.actions.map(action => action.eventType)).toContain("wild_pitch");
+
+		const pitchingChange = snapshot.plays.find(play => play.atBatIndex === 50);
+		expect(pitchingChange?.actions.map(action => action.eventType)).toContain("pitching_substitution");
+		expect(pitchingChange?.actions.some(action => /Pitching Change/i.test(action.description))).toBe(true);
+
+		const ejection = snapshot.plays.find(play => play.atBatIndex === 63);
+		expect(ejection?.actions.map(action => action.eventType)).toContain("ejection");
+	});
+
+	test("carries defensive substitutions from a completed game", async () => {
+		const snapshot = await snapshotFor("final");
+		const play = snapshot.plays.find(entry => entry.actions.some(action => action.eventType === "defensive_substitution"));
+
+		expect(play).toBeDefined();
+		expect(play!.actions.some(action => /Defensive Substitution/i.test(action.description))).toBe(true);
+		expect(play!.actions.some(action => action.playerId != null && action.replacedPlayerId != null)).toBe(true);
+	});
+});
+
 describe("pitch mix", () => {
 	test("snapshot includes in-game mix for pitchers who have thrown", async () => {
 		const snapshot = await snapshotFor("final");

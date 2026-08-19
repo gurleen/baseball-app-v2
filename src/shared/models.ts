@@ -137,6 +137,26 @@ export interface AbsReview {
 
 // ---------- plays ----------
 
+/**
+ * A nested GUMBO action that is not itself a plate appearance — stolen base,
+ * substitution, wild pitch, ejection, status change, and so on. Indexed from
+ * the parent at-bat's `actionIndex`.
+ */
+export interface PlayAction {
+	atBatIndex: number;
+	/** Index into the parent play's `playEvents`. Stable within the at-bat. */
+	eventIndex: number;
+	inning: number;
+	halfInning: HalfInning;
+	eventType: string | null;
+	event: string | null;
+	description: string;
+	isScoringPlay: boolean;
+	isOut: boolean;
+	playerId: number | null;
+	replacedPlayerId: number | null;
+}
+
 export interface PlaySummary {
 	atBatIndex: number;
 	inning: number;
@@ -154,6 +174,8 @@ export interface PlaySummary {
 	scorecard: string | null;
 	scoreAfter: { home: number; away: number };
 	pitches: Pitch[];
+	/** Non-PA actions that occurred during this at-bat, oldest first. */
+	actions: PlayAction[];
 }
 
 /** The at-bat in progress. Same shape as a completed play, minus the result. */
@@ -166,6 +188,8 @@ export interface LivePlay {
 	onDeckId: number | null;
 	description: string | null;
 	pitches: Pitch[];
+	/** Non-PA actions so far in the live at-bat, oldest first. */
+	actions: PlayAction[];
 }
 
 // ---------- game state ----------

@@ -1,9 +1,11 @@
 import type {
 	BattingLine,
 	GameSnapshot,
+	HalfInning,
 	Pitch,
 	PitchMixEntry,
 	PitchingLine,
+	PlayAction,
 	PlaySummary,
 	TeamBox,
 	TeamRef,
@@ -157,28 +159,67 @@ export interface PlayByPlayRow {
 	kind?: "normal" | "score" | "period";
 }
 
+export type PlayLogEntry = { kind: "play"; play: PlaySummary } | { kind: "action"; action: PlayAction };
+
+function logHalf(entry: PlayLogEntry): { inning: number; halfInning: HalfInning } {
+	return entry.kind === "play"
+		? { inning: entry.play.inning, halfInning: entry.play.halfInning }
+		: { inning: entry.action.inning, halfInning: entry.action.halfInning };
+}
+
 /**
- * Completed at-bats as a play-by-play feed, with an inning marker inserted
- * whenever the half changes.
+ * Completed at-bats interleaved with nested non-PA actions (steals, subs,
+ * status changes, …), oldest first. Live-at-bat actions are included so a
+ * steal can appear before the plate appearance finishes.
  */
-export function toPlayByPlayRows(plays: PlaySummary[]): PlayByPlayRow[] {
+export function toPlayLog(snapshot: GameSnapshot): PlayLogEntry[] {
+	const entries: PlayLogEntry[] = [];
+
+	for (const play of snapshot.plays) {
+		for (const action of play.actions) entries.push({ kind: "action", action });
+		entries.push({ kind: "play", play });
+	}
+	for (const action of snapshot.currentPlay?.actions ?? []) {
+		entries.push({ kind: "action", action });
+	}
+
+	return entries;
+}
+
+/**
+ * Completed at-bats and nested non-PA actions as a play-by-play feed, with an
+ * inning marker inserted whenever the half changes.
+ */
+export function toPlayByPlayRows(snapshot: GameSnapshot): PlayByPlayRow[] {
 	const rows: PlayByPlayRow[] = [];
 	let lastHalf = "";
 
-	for (const play of plays) {
-		const half = `${play.halfInning}-${play.inning}`;
+	for (const entry of toPlayLog(snapshot)) {
+		const { inning, halfInning } = logHalf(entry);
+		const half = `${halfInning}-${inning}`;
 		if (half !== lastHalf) {
-			rows.push({ kind: "period", period: `${play.halfInning === "top" ? "TOP" : "BOT"} ${play.inning}` });
+			rows.push({ kind: "period", period: `${halfInning === "top" ? "TOP" : "BOT"} ${inning}` });
 			lastHalf = half;
 		}
 
+		if (entry.kind === "play") {
+			const play = entry.play;
+			rows.push({
+				// The batting side owns the play, so the color bar follows it.
+				team: play.halfInning === "top" ? "away" : "home",
+				clock: play.scorecard ?? undefined,
+				text: play.description,
+				score: play.isScoringPlay ? `${play.scoreAfter.away}-${play.scoreAfter.home}` : undefined,
+				kind: play.isScoringPlay ? "score" : "normal",
+			});
+			continue;
+		}
+
+		const action = entry.action;
 		rows.push({
-			// The batting side owns the play, so the color bar follows it.
-			team: play.halfInning === "top" ? "away" : "home",
-			clock: play.scorecard ?? undefined,
-			text: play.description,
-			score: play.isScoringPlay ? `${play.scoreAfter.away}-${play.scoreAfter.home}` : undefined,
-			kind: play.isScoringPlay ? "score" : "normal",
+			team: action.halfInning === "top" ? "away" : "home",
+			text: action.description,
+			kind: action.isScoringPlay ? "score" : "normal",
 		});
 	}
 
