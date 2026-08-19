@@ -26,9 +26,20 @@ export function SummaryTab({ snapshot }: { snapshot: GameSnapshot }) {
           <PlayByPlay events={toPlayByPlayRows(snapshot.plays)} height={480} newestFirst />
         </Panel>
 
-        <Panel style={shrinkable} title="BATTED BALLS" meta={balls.length ? `${balls.length} tracked` : "no Statcast data yet"}>
+        <Panel
+          style={shrinkable}
+          title="BATTED BALLS"
+          meta={balls.length ? `${balls.length} tracked` : "no Statcast data yet"}
+          padded={false}
+          bodyStyle={{ padding: "var(--sp-3)", minWidth: 0 }}
+        >
           {balls.length > 0 ? (
-            <SprayChart battedBalls={balls} />
+            <SprayChart
+              park={snapshot.teams.home.abbreviation}
+              battedBalls={balls}
+              height={448}
+              style={{ width: "100%", minWidth: 0 }}
+            />
           ) : (
             <div style={{ color: "var(--fg-3)" }}>Statcast has not published batted balls for this game.</div>
           )}
