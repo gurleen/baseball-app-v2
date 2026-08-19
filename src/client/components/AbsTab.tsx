@@ -29,7 +29,7 @@ export function AbsTab({ snapshot }: { snapshot: GameSnapshot }) {
   const focused = selected ? zonePitches.findIndex(pitch => pitch.number === selected.index) : -1
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)", paddingInline: "var(--sp-3)" }}>
       {abs ? (
         <div
           style={{
@@ -57,7 +57,7 @@ export function AbsTab({ snapshot }: { snapshot: GameSnapshot }) {
           }}
         >
           <Panel
-            style={{ ...shrinkable, flex: "0 1 18rem", width: "100%", maxWidth: "18rem" }}
+            style={{ ...shrinkable, flex: "0 1 20rem", width: "100%", maxWidth: "20rem" }}
             title="CHALLENGED PITCHES"
             meta={formatZoneBounds(bounds) ?? `${rows.length}`}
             padded={false}
