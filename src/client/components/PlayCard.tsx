@@ -53,7 +53,7 @@ export function PlayCard({
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--sp-3)", minWidth: 0 }}>
-        {playerId != null ? <PlayerImage playerId={playerId} size={48} /> : <div style={{ width: 48, height: 48, background: "var(--bg-3)", flexShrink: 0 }} />}
+        {playerId != null ? <PlayerImage playerId={playerId} size={48} /> : null}
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--sp-2)" }}>
             <Badge label={badge.toUpperCase()} kind={scoring ? "warn" : "neutral"} />
