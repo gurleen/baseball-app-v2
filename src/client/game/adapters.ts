@@ -2,6 +2,7 @@ import type {
 	BattingLine,
 	GameSnapshot,
 	HalfInning,
+	Handedness,
 	Pitch,
 	PitchMixEntry,
 	PitchingLine,
@@ -368,41 +369,171 @@ export function batterSlash(line: BattingLine): string {
 
 export interface AbsChallengeRow {
 	playId: string;
+	/** 1-based order among ABS challenges this game, oldest first. */
+	index: number;
 	inning: number;
-	halfInning: "top" | "bottom";
+	halfInning: HalfInning;
 	batterId: number;
+	pitcherId: number;
 	callName: string;
 	callCode: string;
-	zone: number | null;
+	result: SportsPitchResult;
 	type: string | null;
 	velocity: number | null;
+	location: { x: number; z: number } | null;
+	strikeZone: { top: number; bottom: number } | null;
+	/** Statcast feet to the ABS zone edge; null until Savant publishes it. */
+	edgeDistance: number | null;
 	isOverturned: boolean;
+	inProgress: boolean;
+	challengeTeamId: number | null;
+	challengerId: number | null;
+	challengerType: string | null;
+	isBatter: boolean | null;
+	batterHand: Handedness | null;
 }
 
 /** Pitches (completed + current) that went to an automated-ball-strike review. */
 export function absChallengeRows(snapshot: GameSnapshot): AbsChallengeRow[] {
-	const plays: Array<{ inning: number; halfInning: "top" | "bottom"; batterId: number; pitches: Pitch[] }> = [
-		...snapshot.plays,
-		...(snapshot.currentPlay ? [snapshot.currentPlay] : []),
-	];
+	const plays = [...snapshot.plays, ...(snapshot.currentPlay ? [snapshot.currentPlay] : [])];
 
 	const rows: AbsChallengeRow[] = [];
 	for (const play of plays) {
 		for (const pitch of play.pitches) {
 			if (!pitch.absReview) continue;
+			const abs = pitch.metrics?.abs;
 			rows.push({
 				playId: pitch.playId,
+				index: rows.length + 1,
 				inning: play.inning,
 				halfInning: play.halfInning,
 				batterId: play.batterId,
+				pitcherId: play.pitcherId,
 				callName: pitch.call.name,
 				callCode: pitch.call.code,
-				zone: pitch.zone,
+				result: toSportsResult(pitch),
 				type: pitch.type?.code ?? null,
 				velocity: pitch.velocity?.start ?? null,
+				location: pitch.location,
+				strikeZone: pitch.strikeZone,
+				edgeDistance: abs?.edgeDistance ?? null,
 				isOverturned: pitch.absReview.isOverturned,
+				inProgress: pitch.absReview.inProgress,
+				challengeTeamId: pitch.absReview.challengeTeamId,
+				challengerId: pitch.absReview.challengerId,
+				challengerType: abs?.challengerType ?? null,
+				isBatter: abs?.isBatter ?? null,
+				batterHand: snapshot.players[play.batterId]?.batSide ?? null,
 			});
 		}
 	}
 	return rows;
+}
+
+/** Mean batter zone across challenges — a composite plot cannot use one stance. */
+export function meanZoneBounds(rows: AbsChallengeRow[]): { zoneTop?: number; zoneBottom?: number } {
+	const zones = rows.map(row => row.strikeZone).filter((zone): zone is NonNullable<typeof zone> => zone !== null);
+	if (zones.length === 0) return {};
+	return {
+		zoneTop: zones.reduce((sum, zone) => sum + zone.top, 0) / zones.length,
+		zoneBottom: zones.reduce((sum, zone) => sum + zone.bottom, 0) / zones.length,
+	};
+}
+
+export function toAbsZonePitches(rows: AbsChallengeRow[]): StrikeZonePitch[] {
+	return rows
+		.filter((row): row is AbsChallengeRow & { location: NonNullable<AbsChallengeRow["location"]> } => row.location !== null)
+		.map(row => ({
+			x: row.location.x,
+			z: row.location.z,
+			type: row.type ?? undefined,
+			result: row.result,
+			number: row.index,
+			label: absChallengeTooltip(row),
+		}));
+}
+
+function absChallengeTooltip(row: AbsChallengeRow): string {
+	const parts = [`#${row.index}`];
+	if (row.type) parts.push(row.type);
+	parts.push(umpCallLabel(row.callCode, row.callName));
+	const miss = formatMissBy(row.edgeDistance);
+	if (miss) parts.push(miss);
+	if (row.inProgress) parts.push("Pending");
+	else parts.push(row.isOverturned ? "Overturned" : "Confirmed");
+	return parts.join(" · ");
+}
+
+export function umpCallLabel(code: string, name: string): string {
+	if (code === "C") return "Called Strike";
+	if (code === "B" || code === "*B") return "Called Ball";
+	return name || code;
+}
+
+/** ABS's call: the ump's call if confirmed, the opposite ball/strike if overturned. */
+export function absCallLabel(code: string, name: string, isOverturned: boolean): string {
+	const ump = umpCallLabel(code, name);
+	if (!isOverturned) return ump;
+	if (ump === "Called Strike") return "Called Ball";
+	if (ump === "Called Ball") return "Called Strike";
+	return ump;
+}
+
+/** `0.30"` from Statcast feet. Omitted when miss-by has not landed yet. */
+export function formatMissBy(feet: number | null | undefined): string | undefined {
+	if (feet == null || !Number.isFinite(feet)) return undefined;
+	return `${(feet * 12).toFixed(2)}"`;
+}
+
+export type MissDirection = "high" | "low" | "inside" | "outside";
+
+/** Home-plate half-width in feet (17" / 2). Direction only — not the official miss. */
+const PLATE_HALF_WIDTH_FT = 8.5 / 12;
+
+/**
+ * Nearest-edge direction from Statcast catcher's view (+x toward first base).
+ * Inside/outside follow the batter's handedness; switch hitters are treated as right-handed.
+ */
+export function missDirection(
+	location: { x: number; z: number } | null,
+	strikeZone: { top: number; bottom: number } | null,
+	batSide: Handedness | null,
+): MissDirection | null {
+	if (!location || !strikeZone) return null;
+
+	const { x, z } = location;
+	const { top, bottom } = strikeZone;
+	const overHigh = Math.max(0, z - top);
+	const overLow = Math.max(0, bottom - z);
+	const overFirst = Math.max(0, x - PLATE_HALF_WIDTH_FT);
+	const overThird = Math.max(0, -PLATE_HALF_WIDTH_FT - x);
+
+	if (overHigh === 0 && overLow === 0 && overFirst === 0 && overThird === 0) {
+		const toTop = top - z;
+		const toBot = z - bottom;
+		const toFirst = PLATE_HALF_WIDTH_FT - x;
+		const toThird = x - -PLATE_HALF_WIDTH_FT;
+		const nearest = Math.min(toTop, toBot, toFirst, toThird);
+		if (nearest === toTop) return "high";
+		if (nearest === toBot) return "low";
+		if (nearest === toFirst) return horizontalMiss(1, batSide);
+		return horizontalMiss(-1, batSide);
+	}
+
+	const overflow = Math.max(overHigh, overLow, overFirst, overThird);
+	if (overflow === overHigh) return "high";
+	if (overflow === overLow) return "low";
+	if (overflow === overFirst) return horizontalMiss(1, batSide);
+	return horizontalMiss(-1, batSide);
+}
+
+function horizontalMiss(xSign: 1 | -1, batSide: Handedness | null): MissDirection {
+	const rightHanded = batSide !== "L";
+	if (xSign > 0) return rightHanded ? "outside" : "inside";
+	return rightHanded ? "inside" : "outside";
+}
+
+export function formatMissDirection(direction: MissDirection | null): string | undefined {
+	if (!direction) return undefined;
+	return direction.toUpperCase();
 }

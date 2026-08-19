@@ -1,6 +1,7 @@
 import type { Play, PlayEvent, ReviewDetails } from "../mlb/schemas/gumbo.ts";
 import type { SavantPitchRow } from "../mlb/schemas/savant.ts";
 import type {
+	AbsChallengeMetrics,
 	AbsReview,
 	BattedBallMetrics,
 	Pitch,
@@ -8,6 +9,9 @@ import type {
 	PitchKind,
 	PitchMetrics,
 } from "../../shared/models.ts";
+
+/** GUMBO's reviewType for an automated ball-strike challenge. */
+const ABS_REVIEW_TYPE = "MJ";
 
 /**
  * Maps a GUMBO pitch call code to the result vocabulary @hydra-tv/sports
@@ -52,44 +56,78 @@ function toCall(event: PlayEvent): PitchCall {
 	};
 }
 
-function toAbsReview(review: ReviewDetails | undefined): AbsReview | null {
-	if (!review) return null;
+function isAbsReview(review: ReviewDetails | undefined): review is ReviewDetails {
+	return review?.reviewType === ABS_REVIEW_TYPE;
+}
+
+function toAbsReview(
+	review: ReviewDetails | undefined,
+	savant: SavantPitchRow | undefined,
+): AbsReview | null {
+	const challenge = savant?.abs_challenge;
+	const savantIsAbs = savant?.is_abs_challenge === true || challenge != null;
+
+	if (isAbsReview(review)) {
+		return {
+			isOverturned: review.isOverturned,
+			inProgress: review.inProgress ?? challenge?.is_in_progress ?? false,
+			reviewType: review.reviewType,
+			challengeTeamId: review.challengeTeamId ?? challenge?.challenge_team_id ?? null,
+			challengerId: review.player?.id ?? challenge?.challenging_player_id ?? null,
+		};
+	}
+
+	if (!savantIsAbs) return null;
+
 	return {
-		isOverturned: review.isOverturned,
-		inProgress: review.inProgress ?? false,
-		reviewType: review.reviewType,
-		challengeTeamId: review.challengeTeamId ?? null,
-		challengerId: review.player?.id ?? null,
+		isOverturned: challenge?.is_overturned ?? false,
+		inProgress: challenge?.is_in_progress ?? false,
+		reviewType: ABS_REVIEW_TYPE,
+		challengeTeamId: challenge?.challenge_team_id ?? null,
+		challengerId: challenge?.challenging_player_id ?? null,
 	};
 }
 
 /**
- * Resolves the ABS/replay review attached to a pitch. MLB has published this
- * in three different places across feed generations, in priority order:
+ * Resolves the ABS review attached to a pitch. MLB has published this in
+ * three different places across feed generations, in priority order:
  *
  *   1. directly on the pitch event (older pattern, reviewType "MJ")
  *   2. on the action event immediately following the pitch (also older)
  *   3. on the play itself — which applies to the *last* pitch of the at-bat
  *      (current pattern)
+ *
+ * Manager challenges (MO / MC / MA) are ignored — they are not ABS.
  */
 function resolveReview(play: Play, event: PlayEvent, eventIndex: number): ReviewDetails | undefined {
-	if (event.reviewDetails) return event.reviewDetails;
+	if (isAbsReview(event.reviewDetails)) return event.reviewDetails;
 
 	const next = play.playEvents[eventIndex + 1];
-	if (next && !next.isPitch && next.reviewDetails) return next.reviewDetails;
+	if (next && !next.isPitch && isAbsReview(next.reviewDetails)) return next.reviewDetails;
 
 	const isLastPitch = !play.playEvents.slice(eventIndex + 1).some(later => later.isPitch);
-	if (isLastPitch && play.reviewDetails) return play.reviewDetails;
+	if (isLastPitch && isAbsReview(play.reviewDetails)) return play.reviewDetails;
 
 	return undefined;
+}
+
+function toAbsChallengeMetrics(row: SavantPitchRow): AbsChallengeMetrics | null {
+	const challenge = row.abs_challenge;
+	if (!challenge && row.is_abs_challenge !== true) return null;
+
+	return {
+		edgeDistance: challenge?.edge_distance ?? challenge?.edge_distance_calc ?? null,
+		isBatter: challenge?.is_batter ?? null,
+		challengerType: challenge?.challenging_player_type ?? null,
+	};
 }
 
 /**
  * Statcast measurements for a pitch, or null when Savant has nothing tracked.
  *
- * Swing and batted-ball tracking are split because they have different
- * coverage: bat speed appears on any tracked swing (including check swings on
- * called pitches), while the batted-ball fields require contact.
+ * Swing, batted-ball, and ABS tracking are independent channels: bat speed
+ * appears on any tracked swing, batted-ball fields require contact, and ABS
+ * miss-by lands on challenged called pitches that often have neither.
  */
 export function toPitchMetrics(row: SavantPitchRow | undefined): PitchMetrics | null {
 	if (!row) return null;
@@ -112,8 +150,10 @@ export function toPitchMetrics(row: SavantPitchRow | undefined): PitchMetrics | 
 			}
 		: null;
 
-	if (!swing && !battedBall) return null;
-	return { swing, battedBall };
+	const abs = toAbsChallengeMetrics(row);
+
+	if (!swing && !battedBall && !abs) return null;
+	return { swing, battedBall, abs };
 }
 
 /**
@@ -172,7 +212,7 @@ export function toPitch(
 			horizontal !== null && inducedVertical !== null && vertical !== null
 				? { horizontal, inducedVertical, vertical }
 				: null,
-		absReview: toAbsReview(resolveReview(play, event, eventIndex)),
+		absReview: toAbsReview(resolveReview(play, event, eventIndex), savant),
 		metrics: toPitchMetrics(savant),
 	};
 }
