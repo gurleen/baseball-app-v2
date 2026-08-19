@@ -32,7 +32,7 @@ const card: CSSProperties = {
 
 const scoreGrid: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "auto 2.75rem 2.25rem 2.25rem",
+  gridTemplateColumns: "auto 2.75rem 2.25rem 2.25rem 2.75rem 2.75rem",
   alignItems: "center",
   columnGap: "var(--sp-2)",
 }
@@ -103,6 +103,12 @@ function TeamScoreboard({ snapshot }: { snapshot: GameSnapshot }) {
         <span style={{ ...rhe, ...muted }}>R</span>
         <span style={{ ...rhe, ...muted }}>H</span>
         <span style={{ ...rhe, ...muted }}>E</span>
+        <span style={{ ...rhe, ...muted }} title="Mound visits remaining">
+          MVR
+        </span>
+        <span style={{ ...rhe, ...muted }} title="ABS challenges remaining">
+          ABS
+        </span>
       </div>
       <TeamScoreRow side="away" snapshot={snapshot} />
       <TeamScoreRow side="home" snapshot={snapshot} />
@@ -142,6 +148,8 @@ function TeamScoreRow({ side, snapshot }: { side: "home" | "away"; snapshot: Gam
       <div style={{ ...rhe, fontSize: "2rem", fontWeight: 800, lineHeight: 1 }}>{line.runs}</div>
       <div style={{ ...rhe, fontSize: "var(--fs-18)", fontWeight: 600 }}>{line.hits}</div>
       <div style={{ ...rhe, fontSize: "var(--fs-18)", fontWeight: 600 }}>{line.errors}</div>
+      <div style={{ ...rhe, fontSize: "var(--fs-18)", fontWeight: 600 }}>{dash(line.moundVisitsRemaining)}</div>
+      <div style={{ ...rhe, fontSize: "var(--fs-18)", fontWeight: 600 }}>{dash(snapshot.abs?.[side].remaining ?? null)}</div>
     </div>
   )
 }
@@ -422,6 +430,10 @@ function PitchCaption({ play }: { play: NonNullable<ReturnType<typeof displayedP
 
   if (!caption) return null
   return <div style={{ ...copy, color: "var(--fg-2)", fontSize: "var(--fs-13)", lineHeight: 1.4 }}>{caption}</div>
+}
+
+function dash(value: number | null): string {
+  return value == null ? "—" : String(value)
 }
 
 function displayName(player: PlayerProfile): string {
