@@ -32,7 +32,7 @@ const card: CSSProperties = {
 
 const scoreGrid: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "auto 2.75rem 2.25rem 2.25rem 2.75rem 2.75rem",
+  gridTemplateColumns: "auto minmax(1.75rem, 2.75rem) minmax(1.5rem, 2.25rem) minmax(1.5rem, 2.25rem) minmax(1.75rem, 2.75rem) minmax(1.75rem, 2.75rem)",
   alignItems: "center",
   columnGap: "var(--sp-2)",
 }
@@ -50,10 +50,26 @@ export function GameHeader({ snapshot }: { snapshot: GameSnapshot }) {
 
   return (
     <div style={{ ...responsiveColumns(340), gap: "var(--sp-3)", alignItems: "stretch" }}>
-      <div style={{ ...card, flexDirection: "row", alignItems: "stretch", gap: "var(--sp-4)" }}>
-        <TeamScoreboard snapshot={snapshot} />
-        {dueUp ? <DueUpColumn snapshot={snapshot} hitters={dueUp} /> : null}
-        <StatusCluster snapshot={snapshot} />
+      <div className="@container" style={shrinkable}>
+        {/* Row vs. column depends on this card's own width, not the
+            viewport: at some viewport sizes it sits beside the linescore
+            card and is much narrower than the viewport itself. */}
+        <div
+          className="flex flex-col @[26rem]:flex-row"
+          style={{
+            ...shrinkable,
+            gap: "var(--sp-4)",
+            alignItems: "stretch",
+            background: "var(--bg-2)",
+            border: "1px solid var(--line-2)",
+            borderRadius: "var(--radius-1)",
+            padding: "var(--sp-3)",
+          }}
+        >
+          <TeamScoreboard snapshot={snapshot} />
+          {dueUp ? <DueUpColumn snapshot={snapshot} hitters={dueUp} /> : null}
+          <StatusCluster snapshot={snapshot} />
+        </div>
       </div>
 
       <div style={{ ...card, minWidth: 0 }}>
@@ -137,6 +153,7 @@ function TeamScoreRow({ side, snapshot }: { side: "home" | "away"; snapshot: Gam
               fontSize: "var(--fs-18)",
               lineHeight: 1.15,
               overflow: "hidden",
+              overflowWrap: "anywhere",
             }}
           >
             {showFranchise ? <span style={{ color: "var(--fg-3)", fontWeight: 500 }}>{franchise}</span> : null}
@@ -225,6 +242,7 @@ function StatusCluster({ snapshot }: { snapshot: GameSnapshot }) {
 
   return (
     <div
+      className="header-status-cluster"
       style={{
         display: "flex",
         flexDirection: "column",
