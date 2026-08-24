@@ -21,6 +21,7 @@ const server = Bun.serve({
 	routes: {
 		"/": index,
 		"/game/*": index,
+		"/batting": index,
 	},
 	async fetch(request, server) {
 		const url = new URL(request.url);

@@ -1,0 +1,1708 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {
+    "public.games": {
+      "name": "games",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_guid": {
+          "name": "game_guid",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_type": {
+          "name": "game_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_date": {
+          "name": "game_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "official_date": {
+          "name": "official_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "day_night": {
+          "name": "day_night",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "double_header": {
+          "name": "double_header",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_number": {
+          "name": "game_number",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scheduled_innings": {
+          "name": "scheduled_innings",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "games_in_series": {
+          "name": "games_in_series",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "series_game_number": {
+          "name": "series_game_number",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "series_description": {
+          "name": "series_description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "venue_pk": {
+          "name": "venue_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_club_pk": {
+          "name": "home_club_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_score": {
+          "name": "home_score",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_is_winner": {
+          "name": "home_is_winner",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "away_club_pk": {
+          "name": "away_club_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "away_score": {
+          "name": "away_score",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "away_is_winner": {
+          "name": "away_is_winner",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abstract_game_state": {
+          "name": "abstract_game_state",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coded_game_state": {
+          "name": "coded_game_state",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "detailed_state": {
+          "name": "detailed_state",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, game_guid, game_type, season, game_date, official_date, day_night, double_header, game_number, scheduled_innings, games_in_series, series_game_number, series_description, venue_pk, home_club_pk, home_score, home_is_winner, away_club_pk, away_score, away_is_winner, abstract_game_state, coded_game_state, detailed_state FROM sqlmesh__public.public__games__3884609178",
+      "materialized": false
+    },
+    "public.woba_weights": {
+      "name": "woba_weights",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "woba": {
+          "name": "woba",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "woba_scale": {
+          "name": "woba_scale",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wbb": {
+          "name": "wbb",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "whbp": {
+          "name": "whbp",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "w1b": {
+          "name": "w1b",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "w2b": {
+          "name": "w2b",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "w3b": {
+          "name": "w3b",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "whr": {
+          "name": "whr",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "run_sb": {
+          "name": "run_sb",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "run_cs": {
+          "name": "run_cs",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "r_pa": {
+          "name": "r_pa",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "r_w": {
+          "name": "r_w",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "c_fip": {
+          "name": "c_fip",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, woba, woba_scale, wbb, whbp, w1b, w2b, w3b, whr, run_sb, run_cs, r_pa, r_w, c_fip FROM sqlmesh__public.public__woba_weights__3211996326",
+      "materialized": false
+    },
+    "public.people": {
+      "name": "people",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retro_id": {
+          "name": "retro_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bbref_id": {
+          "name": "bbref_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bbref_minors_id": {
+          "name": "bbref_minors_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fangraphs_id": {
+          "name": "fangraphs_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "given_name": {
+          "name": "given_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suffix": {
+          "name": "suffix",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nickname": {
+          "name": "nickname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "birth_date": {
+          "name": "birth_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "death_date": {
+          "name": "death_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mlb_debut_year": {
+          "name": "mlb_debut_year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mlb_last_season": {
+          "name": "mlb_last_season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, person_id, uuid, retro_id, bbref_id, bbref_minors_id, fangraphs_id, last_name, first_name, given_name, suffix, nickname, birth_date, death_date, mlb_debut_year, mlb_last_season FROM sqlmesh__public.public__people__1739420493",
+      "materialized": false
+    },
+    "public.club_game_results": {
+      "name": "club_game_results",
+      "schema": "public",
+      "columns": {
+        "game_pk": {
+          "name": "game_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "club_pk": {
+          "name": "club_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_date": {
+          "name": "game_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "day_night": {
+          "name": "day_night",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "double_header": {
+          "name": "double_header",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_home": {
+          "name": "is_home",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "did_win": {
+          "name": "did_win",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT game_pk, club_pk, season, game_date, day_night, double_header, is_home, did_win FROM sqlmesh__public.public__club_game_results__3834347490",
+      "materialized": false
+    },
+    "public.pitching_stats_season": {
+      "name": "pitching_stats_season",
+      "schema": "public",
+      "columns": {
+        "pitcher_pk": {
+          "name": "pitcher_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pa": {
+          "name": "pa",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outs": {
+          "name": "outs",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "h": {
+          "name": "h",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "singles": {
+          "name": "singles",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "doubles": {
+          "name": "doubles",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "triples": {
+          "name": "triples",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_runs": {
+          "name": "home_runs",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bb": {
+          "name": "bb",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ibb": {
+          "name": "ibb",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hbp": {
+          "name": "hbp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "so": {
+          "name": "so",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sf": {
+          "name": "sf",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sh": {
+          "name": "sh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "runs": {
+          "name": "runs",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "earned_runs": {
+          "name": "earned_runs",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "era": {
+          "name": "era",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "whip": {
+          "name": "whip",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "k9": {
+          "name": "k9",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bb9": {
+          "name": "bb9",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hr9": {
+          "name": "hr9",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "babip": {
+          "name": "babip",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fip": {
+          "name": "fip",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lob_pct": {
+          "name": "lob_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qualified": {
+          "name": "qualified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pitcher_pk, season, pa, ip, outs, h, singles, doubles, triples, home_runs, bb, ibb, hbp, so, sf, sh, runs, earned_runs, era, whip, k9, bb9, hr9, babip, fip, lob_pct, qualified FROM sqlmesh__public.public__pitching_stats_season__1191742444",
+      "materialized": false
+    },
+    "public.sports": {
+      "name": "sports",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abbreviation": {
+          "name": "abbreviation",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, code, name, abbreviation, sort_order, active FROM sqlmesh__public.public__sports__1261206631",
+      "materialized": false
+    },
+    "public.clubs_history": {
+      "name": "clubs_history",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "club_pk": {
+          "name": "club_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_name": {
+          "name": "team_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "club_name": {
+          "name": "club_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "franchise_name": {
+          "name": "franchise_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "short_name": {
+          "name": "short_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_name": {
+          "name": "location_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abbreviation": {
+          "name": "abbreviation",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_code": {
+          "name": "team_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_code": {
+          "name": "file_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_year_of_play": {
+          "name": "first_year_of_play",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sport_pk": {
+          "name": "sport_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "league_pk": {
+          "name": "league_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "division_pk": {
+          "name": "division_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "venue_pk": {
+          "name": "venue_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, club_pk, season, name, team_name, club_name, franchise_name, short_name, location_name, abbreviation, team_code, file_code, first_year_of_play, active, sport_pk, league_pk, division_pk, venue_pk FROM sqlmesh__public.public__clubs_history__73235740",
+      "materialized": false
+    },
+    "public.divisions": {
+      "name": "divisions",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name_short": {
+          "name": "name_short",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abbreviation": {
+          "name": "abbreviation",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "league_pk": {
+          "name": "league_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sport_pk": {
+          "name": "sport_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, name, name_short, abbreviation, league_pk, sport_pk, active FROM sqlmesh__public.public__divisions__3226860093",
+      "materialized": false
+    },
+    "public.leagues": {
+      "name": "leagues",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abbreviation": {
+          "name": "abbreviation",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name_short": {
+          "name": "name_short",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sport_pk": {
+          "name": "sport_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, name, abbreviation, name_short, sport_pk, active FROM sqlmesh__public.public__leagues__2544104352",
+      "materialized": false
+    },
+    "public.clubs": {
+      "name": "clubs",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_name": {
+          "name": "team_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "club_name": {
+          "name": "club_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "franchise_name": {
+          "name": "franchise_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "short_name": {
+          "name": "short_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_name": {
+          "name": "location_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abbreviation": {
+          "name": "abbreviation",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_code": {
+          "name": "team_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_code": {
+          "name": "file_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_year_of_play": {
+          "name": "first_year_of_play",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sport_pk": {
+          "name": "sport_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "league_pk": {
+          "name": "league_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "division_pk": {
+          "name": "division_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "venue_pk": {
+          "name": "venue_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, name, team_name, club_name, franchise_name, short_name, location_name, abbreviation, team_code, file_code, first_year_of_play, active, sport_pk, league_pk, division_pk, venue_pk FROM sqlmesh__public.public__clubs__1749365355",
+      "materialized": false
+    },
+    "public.plays": {
+      "name": "plays",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_id": {
+          "name": "game_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "play_seq": {
+          "name": "play_seq",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_date": {
+          "name": "game_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "inning": {
+          "name": "inning",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "half_inning": {
+          "name": "half_inning",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "batting_club_pk": {
+          "name": "batting_club_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pitching_club_pk": {
+          "name": "pitching_club_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "batter_pk": {
+          "name": "batter_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pitcher_pk": {
+          "name": "pitcher_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "balls": {
+          "name": "balls",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "strikes": {
+          "name": "strikes",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outs_after": {
+          "name": "outs_after",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_single": {
+          "name": "is_single",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_double": {
+          "name": "is_double",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_triple": {
+          "name": "is_triple",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_home_run": {
+          "name": "is_home_run",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_walk": {
+          "name": "is_walk",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_intentional_walk": {
+          "name": "is_intentional_walk",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_hit_by_pitch": {
+          "name": "is_hit_by_pitch",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_strikeout": {
+          "name": "is_strikeout",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_sacrifice_fly": {
+          "name": "is_sacrifice_fly",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_sacrifice_bunt": {
+          "name": "is_sacrifice_bunt",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_reached_on_error": {
+          "name": "is_reached_on_error",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_fielders_choice": {
+          "name": "is_fielders_choice",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_catcher_interference": {
+          "name": "is_catcher_interference",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_double_play": {
+          "name": "is_double_play",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_triple_play": {
+          "name": "is_triple_play",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_other_out": {
+          "name": "is_other_out",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rbi": {
+          "name": "rbi",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_scoring_play": {
+          "name": "is_scoring_play",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outs_recorded": {
+          "name": "outs_recorded",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, source_id, game_id, play_seq, season, game_date, inning, half_inning, batting_club_pk, pitching_club_pk, batter_pk, pitcher_pk, balls, strikes, outs_after, is_single, is_double, is_triple, is_home_run, is_walk, is_intentional_walk, is_hit_by_pitch, is_strikeout, is_sacrifice_fly, is_sacrifice_bunt, is_reached_on_error, is_fielders_choice, is_catcher_interference, is_double_play, is_triple_play, is_other_out, rbi, is_scoring_play, outs_recorded FROM sqlmesh__public.public__plays__2751775290",
+      "materialized": false
+    },
+    "public.venues": {
+      "name": "venues",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address1": {
+          "name": "address1",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address2": {
+          "name": "address2",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state_abbrev": {
+          "name": "state_abbrev",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "postal_code": {
+          "name": "postal_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elevation": {
+          "name": "elevation",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "azimuth_angle": {
+          "name": "azimuth_angle",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "time_zone_id": {
+          "name": "time_zone_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "time_zone_abbreviation": {
+          "name": "time_zone_abbreviation",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "time_zone_offset": {
+          "name": "time_zone_offset",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "capacity": {
+          "name": "capacity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "turf_type": {
+          "name": "turf_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "roof_type": {
+          "name": "roof_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_left_line": {
+          "name": "field_left_line",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_left": {
+          "name": "field_left",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_left_center": {
+          "name": "field_left_center",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_center": {
+          "name": "field_center",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_right_center": {
+          "name": "field_right_center",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_right": {
+          "name": "field_right",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_right_line": {
+          "name": "field_right_line",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, name, active, address1, address2, city, state, state_abbrev, postal_code, country, phone, elevation, azimuth_angle, latitude, longitude, time_zone_id, time_zone_abbreviation, time_zone_offset, capacity, turf_type, roof_type, field_left_line, field_left, field_left_center, field_center, field_right_center, field_right, field_right_line FROM sqlmesh__public.public__venues__1490727680",
+      "materialized": false
+    },
+    "public.play_sources": {
+      "name": "play_sources",
+      "schema": "public",
+      "columns": {
+        "source_id": {
+          "name": "source_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_name": {
+          "name": "source_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT source_id, source_name FROM sqlmesh__public.public__play_sources__3816633345",
+      "materialized": false
+    },
+    "public.pitcher_runs_charged": {
+      "name": "pitcher_runs_charged",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "game_id": {
+          "name": "game_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "play_seq": {
+          "name": "play_seq",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pitcher_pk": {
+          "name": "pitcher_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_earned": {
+          "name": "is_earned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, source_id, game_id, play_seq, season, pitcher_pk, is_earned FROM sqlmesh__public.public__pitcher_runs_charged__3179430887",
+      "materialized": false
+    },
+    "public.batting_stats_season": {
+      "name": "batting_stats_season",
+      "schema": "public",
+      "columns": {
+        "batter_pk": {
+          "name": "batter_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pa": {
+          "name": "pa",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ab": {
+          "name": "ab",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "h": {
+          "name": "h",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "singles": {
+          "name": "singles",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "doubles": {
+          "name": "doubles",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "triples": {
+          "name": "triples",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "home_runs": {
+          "name": "home_runs",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bb": {
+          "name": "bb",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ibb": {
+          "name": "ibb",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hbp": {
+          "name": "hbp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "so": {
+          "name": "so",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sf": {
+          "name": "sf",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sh": {
+          "name": "sh",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tb": {
+          "name": "tb",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg": {
+          "name": "avg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "obp": {
+          "name": "obp",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slg": {
+          "name": "slg",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ops": {
+          "name": "ops",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bb_pct": {
+          "name": "bb_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "k_pct": {
+          "name": "k_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bb_k": {
+          "name": "bb_k",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iso": {
+          "name": "iso",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "babip": {
+          "name": "babip",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "woba": {
+          "name": "woba",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wrc_plus": {
+          "name": "wrc_plus",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qualified": {
+          "name": "qualified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT batter_pk, season, pa, ab, h, singles, doubles, triples, home_runs, bb, ibb, hbp, so, sf, sh, tb, avg, obp, slg, ops, bb_pct, k_pct, bb_k, iso, babip, woba, wrc_plus, qualified FROM sqlmesh__public.public__batting_stats_season__2924712780",
+      "materialized": false
+    },
+    "public.park_factors": {
+      "name": "park_factors",
+      "schema": "public",
+      "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "club_pk": {
+          "name": "club_pk",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "season": {
+          "name": "season",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "basic_5yr": {
+          "name": "basic_5yr",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "three_yr": {
+          "name": "three_yr",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "one_yr": {
+          "name": "one_yr",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "single": {
+          "name": "single",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "double": {
+          "name": "double",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "triple": {
+          "name": "triple",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hr": {
+          "name": "hr",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "so": {
+          "name": "so",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bb": {
+          "name": "bb",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gb": {
+          "name": "gb",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fb": {
+          "name": "fb",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ld": {
+          "name": "ld",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iffb": {
+          "name": "iffb",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fip": {
+          "name": "fip",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT pk, club_pk, season, basic_5yr, three_yr, one_yr, single, double, triple, hr, so, bb, gb, fb, ld, iffb, fip FROM sqlmesh__public.public__park_factors__4020210734",
+      "materialized": false
+    }
+  },
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {}
+  }
+}

@@ -10,6 +10,8 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "bun-plugin-tailwind": "^0.1.2",
+    "drizzle-kit": "^0.31.10",
+    "postgres": "^3.4.9",
     "tailwindcss": "^4.3.3"
   },
   "peerDependencies": {
@@ -24,6 +26,7 @@
     "@orpc/tanstack-query": "^1.15.0",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-router": "1.170.18",
+    "drizzle-orm": "^0.45.2",
     "fast-json-patch": "^3.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -40,7 +43,8 @@
     "record-fixture": "bun run scripts/record-fixture.ts",
     "check-join": "bun run scripts/check-join.ts",
     "watch-game": "bun run scripts/watch-game.ts",
-    "dev:replay": "BASEBALL_REPLAY=live bun --hot src/server/index.ts"
+    "dev:replay": "BASEBALL_REPLAY=live bun --hot src/server/index.ts",
+    "db:pull": "drizzle-kit pull"
   },
   "overrides": {
     "@tanstack/router-core": "1.171.15"

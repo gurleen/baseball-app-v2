@@ -39,7 +39,14 @@ function RootLayout() {
             <Badge kind="warn" label={`REPLAY · ${replay.label}`} />
           ) : undefined
         }
-      />
+      >
+        <Link
+          to="/batting"
+          style={{ ...copy, color: "var(--fg-2)", textDecoration: "none", fontSize: "var(--fs-11)" }}
+        >
+          BATTING
+        </Link>
+      </NavBar>
       <main>
         <Outlet />
       </main>
