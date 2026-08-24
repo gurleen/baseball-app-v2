@@ -4,7 +4,7 @@ import { Checkbox, DataGrid, Panel, Select, Spinner } from "@hydra-tv/ui"
 import { z } from "zod"
 
 import { orpc } from "../rpc/client.ts"
-import { fullWidthColumn, shrinkable } from "../lib/layout.ts"
+import { shrinkable } from "../lib/layout.ts"
 
 const searchSchema = z.object({
   season: z.number().int().optional(),
@@ -83,9 +83,8 @@ function BattingPage() {
 
   return (
     <div
+      className="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]"
       style={{
-        ...fullWidthColumn,
-        gridTemplateColumns: "220px minmax(0, 1fr)",
         padding: "var(--sp-4)",
         gap: "var(--sp-4)",
         alignItems: "start",
@@ -124,7 +123,13 @@ function BattingPage() {
         ) : rows.length === 0 ? (
           <div style={{ color: "var(--fg-3)", padding: "var(--sp-4)" }}>No qualifying players.</div>
         ) : (
-          <DataGrid columns={columns} rows={rows} zebra height="calc(100vh - 140px)" />
+          // Fixed height on `lg`+ (single row alongside the sidebar) trades
+          // for a shorter cap once the sidebar stacks above the table on
+          // narrow viewports, so the grid's own scroll region — not the
+          // whole page — still does the scrolling.
+          <div className="h-[60vh] overflow-auto lg:h-[calc(100vh-140px)]">
+            <DataGrid columns={columns} rows={rows} zebra />
+          </div>
         )}
       </Panel>
     </div>
