@@ -146,7 +146,14 @@ function BattingPage() {
           // for a shorter cap once the sidebar stacks above the table on
           // narrow viewports, so the table's own scroll region — not the
           // whole page — still does the scrolling.
-          <div className="h-[60vh] lg:h-[calc(100vh-140px)]" style={{ ...scrollX, overflowY: "auto" }}>
+          <div
+            className="h-[60vh] lg:h-[calc(100vh-140px)]"
+            // `overscrollBehavior: contain` stops iOS Safari's elastic bounce
+            // from dragging this scroll region past its own content bounds
+            // (which briefly exposes blank background on both axes) and from
+            // chaining the scroll gesture up to the page.
+            style={{ ...scrollX, overflowY: "auto", overscrollBehavior: "contain" }}
+          >
             <table style={table}>
               <thead>
                 {tableInstance.getHeaderGroups().map(headerGroup => (
