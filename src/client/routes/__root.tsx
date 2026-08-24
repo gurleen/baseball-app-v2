@@ -46,6 +46,12 @@ function RootLayout() {
         >
           BATTING
         </Link>
+        <Link
+          to="/pitching"
+          style={{ ...copy, color: "var(--fg-2)", textDecoration: "none", fontSize: "var(--fs-11)" }}
+        >
+          PITCHING
+        </Link>
       </NavBar>
       <main>
         <Outlet />

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as BattingRouteImport } from "./routes/batting"
+import { Route as PitchingRouteImport } from "./routes/pitching"
 import { Route as GameGamePkRouteImport } from "./routes/game.$gamePk"
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const BattingRoute = BattingRouteImport.update({
   path: "/batting",
   getParentRoute: () => rootRouteImport,
 } as any)
+const PitchingRoute = PitchingRouteImport.update({
+  id: "/pitching",
+  path: "/pitching",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GameGamePkRoute = GameGamePkRouteImport.update({
   id: "/game/$gamePk",
   path: "/game/$gamePk",
@@ -32,30 +38,34 @@ const GameGamePkRoute = GameGamePkRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/batting": typeof BattingRoute
+  "/pitching": typeof PitchingRoute
   "/game/$gamePk": typeof GameGamePkRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/batting": typeof BattingRoute
+  "/pitching": typeof PitchingRoute
   "/game/$gamePk": typeof GameGamePkRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/batting": typeof BattingRoute
+  "/pitching": typeof PitchingRoute
   "/game/$gamePk": typeof GameGamePkRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/batting" | "/game/$gamePk"
+  fullPaths: "/" | "/batting" | "/pitching" | "/game/$gamePk"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/batting" | "/game/$gamePk"
-  id: "__root__" | "/" | "/batting" | "/game/$gamePk"
+  to: "/" | "/batting" | "/pitching" | "/game/$gamePk"
+  id: "__root__" | "/" | "/batting" | "/pitching" | "/game/$gamePk"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BattingRoute: typeof BattingRoute
+  PitchingRoute: typeof PitchingRoute
   GameGamePkRoute: typeof GameGamePkRoute
 }
 
@@ -75,6 +85,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof BattingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/pitching": {
+      id: "/pitching"
+      path: "/pitching"
+      fullPath: "/pitching"
+      preLoaderRoute: typeof PitchingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/game/$gamePk": {
       id: "/game/$gamePk"
       path: "/game/$gamePk"
@@ -88,6 +105,7 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BattingRoute: BattingRoute,
+  PitchingRoute: PitchingRoute,
   GameGamePkRoute: GameGamePkRoute,
 }
 export const routeTree = rootRouteImport
