@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
-import { Checkbox, Panel, Select, Spinner } from "@hydra-tv/ui"
+import { Checkbox, Combobox, Input, Panel, RadioGroup, Spinner } from "@hydra-tv/ui"
 import {
   createColumnHelper,
   flexRender,
@@ -18,7 +18,19 @@ import { shrinkable, scrollX } from "../lib/layout.ts"
 import { numeric, stripedRow, table, td, th } from "../lib/table.ts"
 
 const searchSchema = z.object({
-  season: z.number().int().optional(),
+  seasonFrom: z.number().int().optional(),
+  seasonTo: z.number().int().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  inning: z.number().int().optional(),
+  halfInning: z.enum(["top", "bottom"]).optional(),
+  outsAfter: z.number().int().optional(),
+  balls: z.number().int().optional(),
+  strikes: z.number().int().optional(),
+  battingClubPk: z.number().int().optional(),
+  pitchingClubPk: z.number().int().optional(),
+  batterHand: z.enum(["L", "R", "B"]).optional(),
+  pitcherHand: z.enum(["L", "R"]).optional(),
   qualified: z.boolean().optional(),
 })
 
@@ -46,11 +58,12 @@ function sortNullable(a: number | null, b: number | null): number {
   return (a ?? -Infinity) - (b ?? -Infinity)
 }
 
-const columnHelper = createColumnHelper<BattingLeader>()
+type SplitRow = Omit<BattingLeader, "club">
+
+const columnHelper = createColumnHelper<SplitRow>()
 
 const columns = [
   columnHelper.accessor("name", { header: "NAME" }),
-  columnHelper.accessor("club", { header: "CLUB", cell: info => info.getValue() ?? "—" }),
   columnHelper.accessor("pa", { header: "PA" }),
   columnHelper.accessor("ab", { header: "AB" }),
   columnHelper.accessor("h", { header: "H" }),
@@ -70,29 +83,55 @@ const columns = [
   columnHelper.accessor("wrcPlus", { header: "wRC+", cell: info => info.getValue() ?? "—", sortingFn: (a, b) => sortNullable(a.original.wrcPlus, b.original.wrcPlus) }),
 ]
 
-const leftAlignedColumns = new Set(["name", "club"])
+const leftAlignedColumns = new Set(["name"])
 
 function alignFor(columnId: string): "left" | "right" {
   return leftAlignedColumns.has(columnId) ? "left" : "right"
 }
 
+// Parses a clearable Combobox's string value back into a filter — clearing
+// emits "", which maps to "no filter" (search params store `undefined`, not
+// "", so the URL stays clean).
+function optionalInt(value: string): number | undefined {
+  return value === "" ? undefined : Number(value)
+}
+
 function BattingPage() {
-  const { season, qualified } = Route.useSearch()
+  const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const [sorting, setSorting] = useState<SortingState>([{ id: "pa", desc: true }])
 
   const seasonsQuery = useQuery(orpc.batting.seasons.queryOptions({ input: {} }))
-  const selectedSeason = season ?? Math.max(...(seasonsQuery.data ?? []))
+  const clubsQuery = useQuery(orpc.batting.clubs.queryOptions({ input: {} }))
+  const latestSeason = seasonsQuery.data ? Math.max(...seasonsQuery.data) : undefined
+  const seasonFrom = search.seasonFrom ?? latestSeason
+  const seasonTo = search.seasonTo ?? latestSeason
+  const qualified = search.qualified ?? true
 
-  const leadersQuery = useQuery(
-    orpc.batting.leaders.queryOptions({
-      input: { season: selectedSeason, qualifiedOnly: qualified },
+  const splitsQuery = useQuery(
+    orpc.batting.splits.queryOptions({
+      input: {
+        seasonFrom,
+        seasonTo,
+        dateFrom: search.dateFrom,
+        dateTo: search.dateTo,
+        inning: search.inning,
+        halfInning: search.halfInning,
+        outsAfter: search.outsAfter,
+        balls: search.balls,
+        strikes: search.strikes,
+        battingClubPk: search.battingClubPk,
+        pitchingClubPk: search.pitchingClubPk,
+        batterHand: search.batterHand,
+        pitcherHand: search.pitcherHand,
+        qualifiedOnly: qualified,
+      },
       enabled: seasonsQuery.data !== undefined,
     }),
   )
 
   const tableInstance = useReactTable({
-    data: leadersQuery.data ?? [],
+    data: splitsQuery.data ?? [],
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -100,9 +139,11 @@ function BattingPage() {
     getSortedRowModel: getSortedRowModel(),
   })
 
+  const clubOptions = (clubsQuery.data ?? []).map(club => ({ value: String(club.clubPk), label: club.abbreviation }))
+
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]"
+      className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)]"
       style={{
         padding: "var(--sp-4)",
         gap: "var(--sp-4)",
@@ -111,16 +152,116 @@ function BattingPage() {
     >
       <Panel title="FILTERS">
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
-          <Select
-            label="SEASON"
-            value={seasonsQuery.data ? String(selectedSeason) : undefined}
+          <Combobox
+            label="SEASON FROM"
+            value={seasonFrom !== undefined ? String(seasonFrom) : undefined}
             options={(seasonsQuery.data ?? []).map(year => String(year))}
-            onChange={value => navigate({ search: prev => ({ ...prev, season: Number(value) }), replace: true })}
+            onChange={value => navigate({ search: prev => ({ ...prev, seasonFrom: Number(value) }), replace: true })}
+          />
+          <Combobox
+            label="SEASON TO"
+            value={seasonTo !== undefined ? String(seasonTo) : undefined}
+            options={(seasonsQuery.data ?? []).map(year => String(year))}
+            onChange={value => navigate({ search: prev => ({ ...prev, seasonTo: Number(value) }), replace: true })}
+          />
+          <Input
+            label="DATE FROM"
+            type="date"
+            value={search.dateFrom ?? ""}
+            onChange={value => navigate({ search: prev => ({ ...prev, dateFrom: value || undefined }), replace: true })}
+          />
+          <Input
+            label="DATE TO"
+            type="date"
+            value={search.dateTo ?? ""}
+            onChange={value => navigate({ search: prev => ({ ...prev, dateTo: value || undefined }), replace: true })}
+          />
+          <Combobox
+            label="BATTING CLUB"
+            placeholder="ANY"
+            clearable
+            value={search.battingClubPk !== undefined ? String(search.battingClubPk) : undefined}
+            options={clubOptions}
+            onChange={value => navigate({ search: prev => ({ ...prev, battingClubPk: optionalInt(value) }), replace: true })}
+          />
+          <Combobox
+            label="VS CLUB"
+            placeholder="ANY"
+            clearable
+            value={search.pitchingClubPk !== undefined ? String(search.pitchingClubPk) : undefined}
+            options={clubOptions}
+            onChange={value => navigate({ search: prev => ({ ...prev, pitchingClubPk: optionalInt(value) }), replace: true })}
+          />
+          <RadioGroup
+            label="BATS"
+            direction="row"
+            value={search.batterHand ?? "ANY"}
+            options={[
+              { value: "ANY", label: "ANY" },
+              { value: "L", label: "L" },
+              { value: "R", label: "R" },
+              { value: "B", label: "SW" },
+            ]}
+            onChange={value => navigate({ search: prev => ({ ...prev, batterHand: value === "ANY" ? undefined : (value as "L" | "R" | "B") }), replace: true })}
+          />
+          <RadioGroup
+            label="VS PITCHER"
+            direction="row"
+            value={search.pitcherHand ?? "ANY"}
+            options={[
+              { value: "ANY", label: "ANY" },
+              { value: "L", label: "LHP" },
+              { value: "R", label: "RHP" },
+            ]}
+            onChange={value => navigate({ search: prev => ({ ...prev, pitcherHand: value === "ANY" ? undefined : (value as "L" | "R") }), replace: true })}
+          />
+          <Combobox
+            label="INNING"
+            placeholder="ANY"
+            clearable
+            value={search.inning !== undefined ? String(search.inning) : undefined}
+            options={Array.from({ length: 9 }, (_, i) => String(i + 1))}
+            onChange={value => navigate({ search: prev => ({ ...prev, inning: optionalInt(value) }), replace: true })}
+          />
+          <RadioGroup
+            label="HALF"
+            direction="row"
+            value={search.halfInning ?? "ANY"}
+            options={[
+              { value: "ANY", label: "ANY" },
+              { value: "top", label: "TOP" },
+              { value: "bottom", label: "BOT" },
+            ]}
+            onChange={value => navigate({ search: prev => ({ ...prev, halfInning: value === "ANY" ? undefined : (value as "top" | "bottom") }), replace: true })}
+          />
+          <Combobox
+            label="OUTS"
+            placeholder="ANY"
+            clearable
+            value={search.outsAfter !== undefined ? String(search.outsAfter) : undefined}
+            options={["0", "1", "2"]}
+            onChange={value => navigate({ search: prev => ({ ...prev, outsAfter: optionalInt(value) }), replace: true })}
+          />
+          <Combobox
+            label="BALLS"
+            placeholder="ANY"
+            clearable
+            value={search.balls !== undefined ? String(search.balls) : undefined}
+            options={["0", "1", "2", "3"]}
+            onChange={value => navigate({ search: prev => ({ ...prev, balls: optionalInt(value) }), replace: true })}
+          />
+          <Combobox
+            label="STRIKES"
+            placeholder="ANY"
+            clearable
+            value={search.strikes !== undefined ? String(search.strikes) : undefined}
+            options={["0", "1", "2"]}
+            onChange={value => navigate({ search: prev => ({ ...prev, strikes: optionalInt(value) }), replace: true })}
           />
           <Checkbox
             label="QUALIFIED"
-            checked={qualified ?? false}
-            onChange={checked => navigate({ search: prev => ({ ...prev, qualified: checked || undefined }), replace: true })}
+            checked={qualified}
+            onChange={checked => navigate({ search: prev => ({ ...prev, qualified: checked ? undefined : false }), replace: true })}
           />
         </div>
       </Panel>
@@ -128,18 +269,18 @@ function BattingPage() {
       <Panel
         style={shrinkable}
         title="BATTING LEADERS"
-        meta={leadersQuery.data ? `${leadersQuery.data.length} players` : undefined}
+        meta={splitsQuery.data ? `${splitsQuery.data.length} players` : undefined}
         padded={false}
       >
-        {leadersQuery.isPending ? (
+        {splitsQuery.isPending ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "var(--sp-6)" }}>
             <Spinner />
           </div>
-        ) : leadersQuery.isError ? (
+        ) : splitsQuery.isError ? (
           <div style={{ color: "var(--err)", padding: "var(--sp-4)" }}>
-            Could not load batting leaders: {(leadersQuery.error as Error).message}
+            Could not load batting leaders: {(splitsQuery.error as Error).message}
           </div>
-        ) : leadersQuery.data.length === 0 ? (
+        ) : splitsQuery.data.length === 0 ? (
           <div style={{ color: "var(--fg-3)", padding: "var(--sp-4)" }}>No qualifying players.</div>
         ) : (
           // Fixed height on `lg`+ (single row alongside the sidebar) trades

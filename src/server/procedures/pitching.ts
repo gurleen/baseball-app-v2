@@ -1,9 +1,12 @@
 import { os } from "@orpc/server";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "../db/client.ts";
 import { clubsHistory, people, pitchingStatsSeason, plays } from "../db/schema.ts";
+import { listClubs, type ClubOption } from "../stats/clubs.ts";
+import { pitchingSplits, type PitchingSplitRow } from "../stats/pitching-splits.ts";
+import { SplitFilters } from "../stats/split-filters.ts";
 
 const LeadersInput = z.object({
 	season: z.number().int(),
@@ -57,6 +60,9 @@ export const pitchingRouter = {
 
 		return rows.map(row => row.season!);
 	}),
+
+	/** Clubs for the split filter's club dropdown. */
+	clubs: os.handler(async (): Promise<ClubOption[]> => listClubs()),
 
 	leaders: os.input(LeadersInput).handler(async ({ input }): Promise<PitchingLeader[]> => {
 		// Club(s) for a player-season aren't on pitchingStatsSeason (it's keyed
@@ -154,6 +160,56 @@ export const pitchingRouter = {
 			fip: toNumber(row.fip),
 			lobPct: toNumber(row.lobPct),
 			qualified: row.qualified ?? false,
+		}));
+	}),
+
+	/**
+	 * Custom stat split over an arbitrary `plays` filter (date range, season
+	 * range, situational, club, handedness) — see `stats/pitching-splits.ts`.
+	 * `qualified` is the 1-IP-per-team-game convention scoped to the split's
+	 * own season/date range, not a fixed season-long threshold.
+	 */
+	splits: os.input(SplitFilters.extend({ qualifiedOnly: z.boolean().optional() })).handler(async ({ input }): Promise<Omit<PitchingLeader, "club">[]> => {
+		const rows = await pitchingSplits(input);
+		if (rows.length === 0) return [];
+
+		const pitcherPks = rows.map(row => row.pitcherPk);
+		const peopleRows = await db
+			.select({ pk: people.pk, firstName: people.firstName, lastName: people.lastName })
+			.from(people)
+			.where(inArray(people.pk, pitcherPks));
+		const namesByPk = new Map(peopleRows.map(p => [p.pk, `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim()]));
+
+		const filteredRows = input.qualifiedOnly ? rows.filter(row => row.qualified) : rows;
+
+		return filteredRows.map((row: PitchingSplitRow) => ({
+			pitcherPk: row.pitcherPk,
+			name: namesByPk.get(row.pitcherPk) ?? "",
+			pa: row.pa,
+			ip: toNumber(row.ip),
+			outs: row.outs,
+			h: row.h,
+			singles: row.singles,
+			doubles: row.doubles,
+			triples: row.triples,
+			homeRuns: row.homeRuns,
+			bb: row.bb,
+			ibb: row.ibb,
+			hbp: row.hbp,
+			so: row.so,
+			sf: row.sf,
+			sh: row.sh,
+			runs: row.runs,
+			earnedRuns: row.earnedRuns,
+			era: toNumber(row.era),
+			whip: toNumber(row.whip),
+			k9: toNumber(row.k9),
+			bb9: toNumber(row.bb9),
+			hr9: toNumber(row.hr9),
+			babip: toNumber(row.babip),
+			fip: toNumber(row.fip),
+			lobPct: toNumber(row.lobPct),
+			qualified: row.qualified,
 		}));
 	}),
 };

@@ -1,4 +1,4 @@
-import { pgTable, pgView, bigint, smallint, timestamp, varchar, boolean, date, text, uuid, integer, numeric, doublePrecision } from "drizzle-orm/pg-core"
+import { pgTable, pgView, bigint, smallint, timestamp, varchar, boolean, date, text, uuid, integer, doublePrecision, numeric } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -153,81 +153,9 @@ export const pitcherRunsCharged = pgView("pitcher_runs_charged", {	// You can us
 	isEarned: boolean("is_earned"),
 }).as(sql`SELECT pk, source_id, game_id, play_seq, season, pitcher_pk, is_earned FROM sqlmesh__public.public__pitcher_runs_charged__3179430887`);
 
-export const pitchingStatsSeason = pgView("pitching_stats_season", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	pitcherPk: bigint("pitcher_pk", { mode: "number" }),
-	season: smallint(),
-	pa: integer(),
-	ip: numeric(),
-	outs: integer(),
-	h: integer(),
-	singles: integer(),
-	doubles: integer(),
-	triples: integer(),
-	homeRuns: integer("home_runs"),
-	bb: integer(),
-	ibb: integer(),
-	hbp: integer(),
-	so: integer(),
-	sf: integer(),
-	sh: integer(),
-	runs: integer(),
-	earnedRuns: integer("earned_runs"),
-	era: numeric(),
-	whip: numeric(),
-	k9: numeric(),
-	bb9: numeric(),
-	hr9: numeric(),
-	babip: numeric(),
-	fip: numeric(),
-	lobPct: numeric("lob_pct"),
-	qualified: boolean(),
-}).as(sql`SELECT pitcher_pk, season, pa, ip, outs, h, singles, doubles, triples, home_runs, bb, ibb, hbp, so, sf, sh, runs, earned_runs, era, whip, k9, bb9, hr9, babip, fip, lob_pct, qualified FROM sqlmesh__public.public__pitching_stats_season__1191742444`);
-
 export const playSources = pgView("play_sources", {	sourceId: smallint("source_id"),
 	sourceName: text("source_name"),
 }).as(sql`SELECT source_id, source_name FROM sqlmesh__public.public__play_sources__3816633345`);
-
-export const plays = pgView("plays", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	pk: bigint({ mode: "number" }),
-	sourceId: integer("source_id"),
-	gameId: varchar("game_id"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	playSeq: bigint("play_seq", { mode: "number" }),
-	season: smallint(),
-	gameDate: date("game_date"),
-	inning: smallint(),
-	halfInning: text("half_inning"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	battingClubPk: bigint("batting_club_pk", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	pitchingClubPk: bigint("pitching_club_pk", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	batterPk: bigint("batter_pk", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	pitcherPk: bigint("pitcher_pk", { mode: "number" }),
-	balls: smallint(),
-	strikes: smallint(),
-	outsAfter: smallint("outs_after"),
-	isSingle: boolean("is_single"),
-	isDouble: boolean("is_double"),
-	isTriple: boolean("is_triple"),
-	isHomeRun: boolean("is_home_run"),
-	isWalk: boolean("is_walk"),
-	isIntentionalWalk: boolean("is_intentional_walk"),
-	isHitByPitch: boolean("is_hit_by_pitch"),
-	isStrikeout: boolean("is_strikeout"),
-	isSacrificeFly: boolean("is_sacrifice_fly"),
-	isSacrificeBunt: boolean("is_sacrifice_bunt"),
-	isReachedOnError: boolean("is_reached_on_error"),
-	isFieldersChoice: boolean("is_fielders_choice"),
-	isCatcherInterference: boolean("is_catcher_interference"),
-	isDoublePlay: boolean("is_double_play"),
-	isTriplePlay: boolean("is_triple_play"),
-	isOtherOut: boolean("is_other_out"),
-	rbi: smallint(),
-	isScoringPlay: boolean("is_scoring_play"),
-	outsRecorded: integer("outs_recorded"),
-}).as(sql`SELECT pk, source_id, game_id, play_seq, season, game_date, inning, half_inning, batting_club_pk, pitching_club_pk, batter_pk, pitcher_pk, balls, strikes, outs_after, is_single, is_double, is_triple, is_home_run, is_walk, is_intentional_walk, is_hit_by_pitch, is_strikeout, is_sacrifice_fly, is_sacrifice_bunt, is_reached_on_error, is_fielders_choice, is_catcher_interference, is_double_play, is_triple_play, is_other_out, rbi, is_scoring_play, outs_recorded FROM sqlmesh__public.public__plays__2751775290`);
 
 export const sports = pgView("sports", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	pk: bigint({ mode: "number" }),
@@ -342,6 +270,98 @@ export const parkFactors = pgView("park_factors", {	// You can use { mode: "bigi
 	fip: numeric(),
 }).as(sql`SELECT pk, club_pk, season, basic_5yr, three_yr, one_yr, single, double, triple, hr, so, bb, gb, fb, ld, iffb, fip FROM sqlmesh__public.public__park_factors__2129036003`);
 
+export const gameDataCompleteness = pgView("game_data_completeness", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	pk: bigint({ mode: "number" }),
+	season: smallint(),
+	gameDate: timestamp("game_date", { withTimezone: true, mode: 'string' }),
+	abstractGameState: varchar("abstract_game_state"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	mlbPlaybyplayPlayCount: bigint("mlb_playbyplay_play_count", { mode: "number" }),
+	hasMlbPlaybyplay: boolean("has_mlb_playbyplay"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	statcastPitchCount: bigint("statcast_pitch_count", { mode: "number" }),
+	hasStatcastPitches: boolean("has_statcast_pitches"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	statcastBattedBallCount: bigint("statcast_batted_ball_count", { mode: "number" }),
+	hasStatcastBattedBalls: boolean("has_statcast_batted_balls"),
+	isMissingMlbPlaybyplay: boolean("is_missing_mlb_playbyplay"),
+	isMissingStatcastPitches: boolean("is_missing_statcast_pitches"),
+}).as(sql`SELECT pk, season, game_date, abstract_game_state, mlb_playbyplay_play_count, has_mlb_playbyplay, statcast_pitch_count, has_statcast_pitches, statcast_batted_ball_count, has_statcast_batted_balls, is_missing_mlb_playbyplay, is_missing_statcast_pitches FROM sqlmesh__public.public__game_data_completeness__2208078641`);
+
+export const plays = pgView("plays", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	pk: bigint({ mode: "number" }),
+	sourceId: integer("source_id"),
+	gameId: varchar("game_id"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	playSeq: bigint("play_seq", { mode: "number" }),
+	season: smallint(),
+	gameDate: date("game_date"),
+	inning: smallint(),
+	halfInning: text("half_inning"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	battingClubPk: bigint("batting_club_pk", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	pitchingClubPk: bigint("pitching_club_pk", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	batterPk: bigint("batter_pk", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	pitcherPk: bigint("pitcher_pk", { mode: "number" }),
+	balls: smallint(),
+	strikes: smallint(),
+	outsAfter: smallint("outs_after"),
+	batterHand: varchar("batter_hand"),
+	pitcherHand: varchar("pitcher_hand"),
+	isSingle: boolean("is_single"),
+	isDouble: boolean("is_double"),
+	isTriple: boolean("is_triple"),
+	isHomeRun: boolean("is_home_run"),
+	isWalk: boolean("is_walk"),
+	isIntentionalWalk: boolean("is_intentional_walk"),
+	isHitByPitch: boolean("is_hit_by_pitch"),
+	isStrikeout: boolean("is_strikeout"),
+	isSacrificeFly: boolean("is_sacrifice_fly"),
+	isSacrificeBunt: boolean("is_sacrifice_bunt"),
+	isReachedOnError: boolean("is_reached_on_error"),
+	isFieldersChoice: boolean("is_fielders_choice"),
+	isCatcherInterference: boolean("is_catcher_interference"),
+	isDoublePlay: boolean("is_double_play"),
+	isTriplePlay: boolean("is_triple_play"),
+	isOtherOut: boolean("is_other_out"),
+	rbi: smallint(),
+	isScoringPlay: boolean("is_scoring_play"),
+	outsRecorded: integer("outs_recorded"),
+}).as(sql`SELECT pk, source_id, game_id, play_seq, season, game_date, inning, half_inning, batting_club_pk, pitching_club_pk, batter_pk, pitcher_pk, balls, strikes, outs_after, batter_hand, pitcher_hand, is_single, is_double, is_triple, is_home_run, is_walk, is_intentional_walk, is_hit_by_pitch, is_strikeout, is_sacrifice_fly, is_sacrifice_bunt, is_reached_on_error, is_fielders_choice, is_catcher_interference, is_double_play, is_triple_play, is_other_out, rbi, is_scoring_play, outs_recorded FROM sqlmesh__public.public__plays__3441883269`);
+
+export const pitchingStatsSeason = pgView("pitching_stats_season", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	pitcherPk: bigint("pitcher_pk", { mode: "number" }),
+	season: smallint(),
+	pa: integer(),
+	ip: numeric(),
+	outs: integer(),
+	h: integer(),
+	singles: integer(),
+	doubles: integer(),
+	triples: integer(),
+	homeRuns: integer("home_runs"),
+	bb: integer(),
+	ibb: integer(),
+	hbp: integer(),
+	so: integer(),
+	sf: integer(),
+	sh: integer(),
+	runs: integer(),
+	earnedRuns: integer("earned_runs"),
+	era: numeric(),
+	whip: numeric(),
+	k9: numeric(),
+	bb9: numeric(),
+	hr9: numeric(),
+	babip: numeric(),
+	fip: numeric(),
+	lobPct: numeric("lob_pct"),
+	qualified: boolean(),
+}).as(sql`SELECT pitcher_pk, season, pa, ip, outs, h, singles, doubles, triples, home_runs, bb, ibb, hbp, so, sf, sh, runs, earned_runs, era, whip, k9, bb9, hr9, babip, fip, lob_pct, qualified FROM sqlmesh__public.public__pitching_stats_season__1191742444`);
+
 export const battingStatsSeason = pgView("batting_stats_season", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	batterPk: bigint("batter_pk", { mode: "number" }),
 	season: smallint(),
@@ -372,49 +392,6 @@ export const battingStatsSeason = pgView("batting_stats_season", {	// You can us
 	wrcPlus: integer("wrc_plus"),
 	qualified: boolean(),
 }).as(sql`SELECT batter_pk, season, pa, ab, h, singles, doubles, triples, home_runs, bb, ibb, hbp, so, sf, sh, tb, avg, obp, slg, ops, bb_pct, k_pct, bb_k, iso, babip, woba, wrc_plus, qualified FROM sqlmesh__public.public__batting_stats_season__3606623551`);
-
-export const gameDataCompleteness = pgView("game_data_completeness", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	pk: bigint({ mode: "number" }),
-	season: smallint(),
-	gameDate: timestamp("game_date", { withTimezone: true, mode: 'string' }),
-	abstractGameState: varchar("abstract_game_state"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	mlbPlaybyplayPlayCount: bigint("mlb_playbyplay_play_count", { mode: "number" }),
-	hasMlbPlaybyplay: boolean("has_mlb_playbyplay"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	statcastPitchCount: bigint("statcast_pitch_count", { mode: "number" }),
-	hasStatcastPitches: boolean("has_statcast_pitches"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	statcastBattedBallCount: bigint("statcast_batted_ball_count", { mode: "number" }),
-	hasStatcastBattedBalls: boolean("has_statcast_batted_balls"),
-	isMissingMlbPlaybyplay: boolean("is_missing_mlb_playbyplay"),
-	isMissingStatcastPitches: boolean("is_missing_statcast_pitches"),
-}).as(sql`SELECT pk, season, game_date, abstract_game_state, mlb_playbyplay_play_count, has_mlb_playbyplay, statcast_pitch_count, has_statcast_pitches, statcast_batted_ball_count, has_statcast_batted_balls, is_missing_mlb_playbyplay, is_missing_statcast_pitches FROM sqlmesh__public.public__game_data_completeness__2208078641`);
-
-export const seasonDataCompleteness = pgView("season_data_completeness", {	season: smallint(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	totalGames: bigint("total_games", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	finalGames: bigint("final_games", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	gamesWithMlbPlaybyplay: bigint("games_with_mlb_playbyplay", { mode: "number" }),
-	pctMlbPlaybyplay: doublePrecision("pct_mlb_playbyplay"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	gamesWithStatcastPitches: bigint("games_with_statcast_pitches", { mode: "number" }),
-	pctStatcastPitches: doublePrecision("pct_statcast_pitches"),
-	avgStatcastPitchesPerGame: doublePrecision("avg_statcast_pitches_per_game"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	gamesWithStatcastBattedBalls: bigint("games_with_statcast_batted_balls", { mode: "number" }),
-	pctStatcastBattedBalls: doublePrecision("pct_statcast_batted_balls"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	retrosheetGames: bigint("retrosheet_games", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	retrosheetPlateAppearances: bigint("retrosheet_plate_appearances", { mode: "number" }),
-	retrosheetBatterResolvedPct: doublePrecision("retrosheet_batter_resolved_pct"),
-	retrosheetPitcherResolvedPct: doublePrecision("retrosheet_pitcher_resolved_pct"),
-	retrosheetBattingClubResolvedPct: doublePrecision("retrosheet_batting_club_resolved_pct"),
-	retrosheetPitchingClubResolvedPct: doublePrecision("retrosheet_pitching_club_resolved_pct"),
-}).as(sql`SELECT season, total_games, final_games, games_with_mlb_playbyplay, pct_mlb_playbyplay, games_with_statcast_pitches, pct_statcast_pitches, avg_statcast_pitches_per_game, games_with_statcast_batted_balls, pct_statcast_batted_balls, retrosheet_games, retrosheet_plate_appearances, retrosheet_batter_resolved_pct, retrosheet_pitcher_resolved_pct, retrosheet_batting_club_resolved_pct, retrosheet_pitching_club_resolved_pct FROM sqlmesh__public.public__season_data_completeness__3334058879`);
 
 export const statcastPitches = pgView("statcast_pitches", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	pk: bigint({ mode: "number" }),
@@ -482,6 +459,31 @@ export const statcastPitches = pgView("statcast_pitches", {	// You can use { mod
 	gameTotalPitches: smallint("game_total_pitches"),
 	pitcherTotalPitches: smallint("pitcher_total_pitches"),
 }).as(sql`SELECT pk, play_pk, play_id, game_pk, ab_number, season, inning, half_inning, outs, pitch_number, batter_pk, pitcher_pk, catcher_pk, batter_stand, pitcher_throws, team_batting_id, team_fielding_id, balls_before, strikes_before, balls_after, strikes_after, pitch_type, pitch_name, pitch_call, pitch_description, is_strike_swinging, is_in_zone, event_type, release_speed, plate_speed, extension, spin_rate, horizontal_break, induced_vertical_break, plate_x, plate_z, strike_zone_top, strike_zone_bottom, zone, release_pos_x, release_pos_y, release_pos_z, vx0, vy0, vz0, ax, ay, az, bat_speed, is_bip_out, is_sword, pitcher_pa_number, pitcher_time_thru_order, game_total_pitches, pitcher_total_pitches FROM sqlmesh__public.public__statcast_pitches__40484311`);
+
+export const seasonDataCompleteness = pgView("season_data_completeness", {	season: smallint(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	totalGames: bigint("total_games", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	finalGames: bigint("final_games", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	gamesWithMlbPlaybyplay: bigint("games_with_mlb_playbyplay", { mode: "number" }),
+	pctMlbPlaybyplay: doublePrecision("pct_mlb_playbyplay"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	gamesWithStatcastPitches: bigint("games_with_statcast_pitches", { mode: "number" }),
+	pctStatcastPitches: doublePrecision("pct_statcast_pitches"),
+	avgStatcastPitchesPerGame: doublePrecision("avg_statcast_pitches_per_game"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	gamesWithStatcastBattedBalls: bigint("games_with_statcast_batted_balls", { mode: "number" }),
+	pctStatcastBattedBalls: doublePrecision("pct_statcast_batted_balls"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	retrosheetGames: bigint("retrosheet_games", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	retrosheetPlateAppearances: bigint("retrosheet_plate_appearances", { mode: "number" }),
+	retrosheetBatterResolvedPct: doublePrecision("retrosheet_batter_resolved_pct"),
+	retrosheetPitcherResolvedPct: doublePrecision("retrosheet_pitcher_resolved_pct"),
+	retrosheetBattingClubResolvedPct: doublePrecision("retrosheet_batting_club_resolved_pct"),
+	retrosheetPitchingClubResolvedPct: doublePrecision("retrosheet_pitching_club_resolved_pct"),
+}).as(sql`SELECT season, total_games, final_games, games_with_mlb_playbyplay, pct_mlb_playbyplay, games_with_statcast_pitches, pct_statcast_pitches, avg_statcast_pitches_per_game, games_with_statcast_batted_balls, pct_statcast_batted_balls, retrosheet_games, retrosheet_plate_appearances, retrosheet_batter_resolved_pct, retrosheet_pitcher_resolved_pct, retrosheet_batting_club_resolved_pct, retrosheet_pitching_club_resolved_pct FROM sqlmesh__public.public__season_data_completeness__3334058879`);
 
 export const statcastBattedBalls = pgView("statcast_batted_balls", {	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	pk: bigint({ mode: "number" }),
