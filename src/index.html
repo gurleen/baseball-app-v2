@@ -4,6 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gurleen's Baseball App</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("hydra-tv-theme")
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"
+          }
+          document.documentElement.setAttribute("data-theme", t)
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -22,9 +22,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@hydra-tv/sports": "^0.3.7",
-    "@hydra-tv/tokens": "^0.3.0",
-    "@hydra-tv/ui": "^0.3.2",
+    "@hydra-tv/sports": "0.3.9",
+    "@hydra-tv/tokens": "^0.3.1",
+    "@hydra-tv/ui": "0.3.4",
     "@orpc/client": "^1.15.0",
     "@orpc/server": "^1.15.0",
     "@orpc/tanstack-query": "^1.15.0",
