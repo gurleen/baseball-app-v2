@@ -4,15 +4,19 @@
   "type": "module",
   "private": true,
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-router-devtools": "^1.167.1",
     "@tanstack/router-cli": "^1.167.30",
     "@types/bun": "latest",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.1",
     "bun-plugin-tailwind": "^0.1.2",
+    "concurrently": "^10.0.5",
     "drizzle-kit": "^0.31.10",
     "postgres": "^3.4.9",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.2.2"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -34,7 +38,9 @@
     "zod": "^4.4.3"
   },
   "scripts": {
-    "dev": "bun --hot src/server/index.ts",
+    "dev": "concurrently -n api,web -c blue,green \"bun run dev:api\" \"bun run dev:web\"",
+    "dev:api": "bun --hot src/server/index.ts",
+    "dev:web": "vite",
     "routes": "tsr watch",
     "build": "bun run scripts/build.ts",
     "start": "bun src/server/index.ts",
@@ -44,7 +50,7 @@
     "record-fixture": "bun run scripts/record-fixture.ts",
     "check-join": "bun run scripts/check-join.ts",
     "watch-game": "bun run scripts/watch-game.ts",
-    "dev:replay": "BASEBALL_REPLAY=live bun --hot src/server/index.ts",
+    "dev:replay": "concurrently -n api,web -c blue,green \"BASEBALL_REPLAY=live bun --hot src/server/index.ts\" \"bun run dev:web\"",
     "db:pull": "drizzle-kit pull"
   },
   "overrides": {
