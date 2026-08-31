@@ -249,7 +249,7 @@ function StatusCluster({ snapshot }: { snapshot: GameSnapshot }) {
         alignItems: "center",
         justifyContent: "center",
         gap: "var(--sp-2)",
-        flexShrink: 0,
+        flex: 1,
         paddingInline: "var(--sp-2)",
       }}
     >
