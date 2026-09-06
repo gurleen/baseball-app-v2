@@ -170,10 +170,9 @@ don't reuse the batting qualified copy verbatim.
 ### Wiring checklist (both easy to forget, no error until you try it)
 
 - Register the new router in `src/server/router.ts`.
-- Add the new route's path to `Bun.serve`'s static `routes` map in
-  `src/server/index.ts` (alongside `"/"` and `"/game/*"`) — without this, the
-  client-side link works fine but a direct load or refresh on `/pitching`
-  404s, because that path was never wired to serve the SPA shell.
+- ~~Add the new route's path to `Bun.serve`'s static `routes` map~~ — no longer
+  needed. The client bundle moved to Vite and `src/server/index.ts` now serves
+  `dist/` with a catch-all SPA fallback, so any path resolves on a hard refresh.
 - Run `bunx tsr generate` after adding the route file so
   `src/client/routeTree.gen.ts` picks it up — it's generated, not
   hand-edited, and `Route.useSearch()`/`useNavigate()` typing depends on it.

@@ -7,12 +7,12 @@ previous app's per-viewer polling of statsapi.
 ## Commands
 
 ```sh
-bun run dev          # app + /rpc + /ws on :3030
+bun run dev          # web on :3000 (Vite), /rpc + /ws + /health on :3030
 bun run dev:replay   # same, but watchers replay a recorded fixture (no network)
 bun run routes       # tsr watch — regenerates routeTree.gen.ts from src/client/routes
 bun test
 bun run typecheck
-bun run build        # production bundle -> dist/
+bun run build        # vite build -> dist/, which `bun run start` then serves
 ```
 
 Utilities: `bun run record-fixture <gamePk> <label>`, `bun run check-join <label>`,
@@ -56,8 +56,31 @@ broadcast that lags the data feed. Calibrate in the game's SETTINGS tab.
   'replaceRouteChunk')`). `react-router` is pinned to 1.170.18 with an
   `overrides` entry forcing router-core 1.171.15. Typecheck and build both pass
   when this breaks — only loading the page catches it.
-- **`bun build` (CLI) has no `--plugin` flag** and bunfig's plugin list only
-  applies to the dev server, so production builds go through `scripts/build.ts`.
+- **Vite owns the client bundle in dev *and* production.** `bun run build` is
+  `vite build`; the Bun server serves `dist/` with a catch-all SPA fallback, so
+  a new route needs no entry in `src/server/index.ts` — only the route file and
+  `bun run routes`. Port 3030 no longer serves the UI in dev; Vite does, on 3000.
+- **Pin `monaco-editor` to 0.54.0 (exact).** From 0.56.0 its `exports` map
+  rewrites every subpath through `esm/vs/`, so the deep specifiers
+  `monaco-sql-languages` hardcodes (`monaco-editor/esm/vs/editor/editor.api`,
+  `…/editor.worker.js`) resolve to `esm/vs/esm/vs/…` and don't exist. 0.54.0 has
+  no `exports` field and is what monaco-sql-languages itself builds against.
+  `bun run typecheck` catches this one; the browser wouldn't.
+- **Import Monaco by its bare specifier** (`import * as monaco from "monaco-editor"`).
+  That resolves to `editor.main.js`, which patches `editor.createWebWorker` to
+  accept the legacy `{moduleId, label, createData}` call that
+  monaco-sql-languages' worker manager makes. Importing
+  `monaco-editor/esm/vs/editor/editor.api` directly skips the patch and the SQL
+  worker silently never starts.
+- **Never import from the `monaco-sql-languages` root for values.** Its
+  `esm/main.js` re-exports `EntityContextType` from `dt-sql-parser`, which drags
+  the 4MB ANTLR grammar onto the main thread — it belongs in the worker. Deep
+  import `esm/setupLanguageFeatures.js` / `esm/common/constants.js` instead.
+  Symptom is a bloated `CustomQueryPage` chunk, not an error.
+- **Monaco must not sit in normal flow.** Its `lines-content` is sized to 2^24px
+  and it measures its own container, so an in-flow container makes the whole
+  page scroll sideways on a phone. `SqlEditor` absolute-fills a `position:
+  relative` wrapper for exactly this reason.
 - **Savant `no_pitch` rows carry no `play_id`** (replay-review automatic strikes,
   timer violations) and are dropped when indexing. Batted-ball fields are
   string-encoded; bat speed appears on *any* swing including check swings, which
