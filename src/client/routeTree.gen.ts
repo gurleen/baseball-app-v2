@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as BattingRouteImport } from "./routes/batting"
+import { Route as CustomQueryRouteImport } from "./routes/custom-query"
 import { Route as PitchingRouteImport } from "./routes/pitching"
 import { Route as GameGamePkRouteImport } from "./routes/game.$gamePk"
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const BattingRoute = BattingRouteImport.update({
   id: "/batting",
   path: "/batting",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomQueryRoute = CustomQueryRouteImport.update({
+  id: "/custom-query",
+  path: "/custom-query",
   getParentRoute: () => rootRouteImport,
 } as any)
 const PitchingRoute = PitchingRouteImport.update({
@@ -38,12 +44,14 @@ const GameGamePkRoute = GameGamePkRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/batting": typeof BattingRoute
+  "/custom-query": typeof CustomQueryRoute
   "/pitching": typeof PitchingRoute
   "/game/$gamePk": typeof GameGamePkRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/batting": typeof BattingRoute
+  "/custom-query": typeof CustomQueryRoute
   "/pitching": typeof PitchingRoute
   "/game/$gamePk": typeof GameGamePkRoute
 }
@@ -51,20 +59,28 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/batting": typeof BattingRoute
+  "/custom-query": typeof CustomQueryRoute
   "/pitching": typeof PitchingRoute
   "/game/$gamePk": typeof GameGamePkRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/batting" | "/pitching" | "/game/$gamePk"
+  fullPaths: "/" | "/batting" | "/custom-query" | "/pitching" | "/game/$gamePk"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/batting" | "/pitching" | "/game/$gamePk"
-  id: "__root__" | "/" | "/batting" | "/pitching" | "/game/$gamePk"
+  to: "/" | "/batting" | "/custom-query" | "/pitching" | "/game/$gamePk"
+  id:
+    | "__root__"
+    | "/"
+    | "/batting"
+    | "/custom-query"
+    | "/pitching"
+    | "/game/$gamePk"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BattingRoute: typeof BattingRoute
+  CustomQueryRoute: typeof CustomQueryRoute
   PitchingRoute: typeof PitchingRoute
   GameGamePkRoute: typeof GameGamePkRoute
 }
@@ -83,6 +99,13 @@ declare module "@tanstack/react-router" {
       path: "/batting"
       fullPath: "/batting"
       preLoaderRoute: typeof BattingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/custom-query": {
+      id: "/custom-query"
+      path: "/custom-query"
+      fullPath: "/custom-query"
+      preLoaderRoute: typeof CustomQueryRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/pitching": {
@@ -105,6 +128,7 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BattingRoute: BattingRoute,
+  CustomQueryRoute: CustomQueryRoute,
   PitchingRoute: PitchingRoute,
   GameGamePkRoute: GameGamePkRoute,
 }

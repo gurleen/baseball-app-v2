@@ -1,12 +1,20 @@
+import { join, normalize } from "node:path";
+
 import { RPCHandler as FetchRPCHandler } from "@orpc/server/fetch";
 import { RPCHandler as BunWsRPCHandler } from "@orpc/server/bun-ws";
 
-import index from "../index.html";
 import { gameRegistry } from "./game/registry.ts";
 import { router } from "./router.ts";
 
 const port = Number(process.env.PORT ?? 3030);
 const isDev = process.env.NODE_ENV !== "production";
+
+// Vite owns the client bundle (`bun run build` -> dist/). In dev the frontend
+// is served by Vite on its own port and this server only answers /rpc, /ws and
+// /health; in production it also serves dist/ with an SPA fallback, so every
+// client route works on a hard refresh without being enumerated here.
+const distDir = normalize(new URL("../../dist/", import.meta.url).pathname);
+const indexHtml = join(distDir, "index.html");
 
 // Two adapters over one router. The WebSocket handler carries everything the
 // live game page needs — including the `game.subscribe` event iterator — while
@@ -15,15 +23,32 @@ const isDev = process.env.NODE_ENV !== "production";
 const wsHandler = new BunWsRPCHandler(router);
 const httpHandler = new FetchRPCHandler(router);
 
+/**
+ * A built asset if the path names one, otherwise index.html so the client
+ * router can resolve the URL itself. Returns 404 only when there is no build
+ * at all — in dev that is the expected answer, since Vite serves the frontend.
+ */
+async function serveClient(pathname: string): Promise<Response> {
+	// `normalize` collapses any "..", and the prefix check then keeps the
+	// resolved path inside dist/ — without it, "/../.env" would escape.
+	const requested = normalize(join(distDir, pathname));
+	if (requested.startsWith(distDir)) {
+		const asset = Bun.file(requested);
+		if (await asset.exists()) return new Response(asset);
+	}
+
+	const shell = Bun.file(indexHtml);
+	if (await shell.exists()) return new Response(shell);
+
+	return new Response(
+		isDev ? "No client build. Run `bun run dev:web` for the Vite dev server, or `bun run build`." : "Not Found",
+		{ status: 404 },
+	);
+}
+
 const server = Bun.serve({
 	port,
 	hostname: "0.0.0.0",
-	routes: {
-		"/": index,
-		"/game/*": index,
-		"/batting": index,
-		"/pitching": index,
-	},
 	async fetch(request, server) {
 		const url = new URL(request.url);
 
@@ -39,7 +64,7 @@ const server = Bun.serve({
 		const result = await httpHandler.handle(request, { prefix: "/rpc" });
 		if (result.matched) return result.response;
 
-		return new Response("Not Found", { status: 404 });
+		return serveClient(url.pathname);
 	},
 	websocket: {
 		message: (ws, message) => wsHandler.message(ws, message),

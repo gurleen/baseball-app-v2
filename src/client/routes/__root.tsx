@@ -53,6 +53,20 @@ function RootLayout() {
           ]}
           onSelect={(key) => navigate({ to: key })}
         />
+        {/* NavBar spaces its children by only 2px, so nav items carry their own
+            separation — without this, "LEADERS" and "QUERY" read as one word. */}
+        <Link
+          to="/custom-query"
+          style={{
+            ...copy,
+            color: "var(--fg-2)",
+            fontSize: "var(--fs-11)",
+            textDecoration: "none",
+            marginLeft: "var(--sp-4)",
+          }}
+        >
+          QUERY
+        </Link>
       </NavBar>
       <main>
         <Outlet />
