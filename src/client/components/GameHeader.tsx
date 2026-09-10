@@ -433,7 +433,7 @@ function ProbableStrip({ snapshot }: { snapshot: GameSnapshot }) {
 
 const matchupGrid: CSSProperties = {
 	display: 'grid',
-	gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+	gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
 	gap: 'var(--sp-3)',
 	minWidth: 0
 };
