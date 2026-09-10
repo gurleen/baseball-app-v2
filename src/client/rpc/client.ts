@@ -1,13 +1,13 @@
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/websocket";
-import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { RouterClient } from "@orpc/server";
+import { createORPCClient } from '@orpc/client';
+import { RPCLink } from '@orpc/client/websocket';
+import { createTanstackQueryUtils } from '@orpc/tanstack-query';
+import type { RouterClient } from '@orpc/server';
 
-import type { Router } from "../../server/router.ts";
-import { ReconnectingSocket } from "./socket.ts";
+import type { Router } from '../../server/router.ts';
+import { ReconnectingSocket } from './socket.ts';
 
 function websocketUrl(): string {
-	const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+	const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
 	return `${protocol}//${location.host}/ws`;
 }
 
@@ -36,7 +36,7 @@ function setConnected(connected: boolean) {
 export const socket = new ReconnectingSocket({
 	url: websocketUrl(),
 	onOpen: () => setConnected(true),
-	onClose: () => setConnected(false),
+	onClose: () => setConnected(false)
 });
 
 // One socket serves both plain calls and the live game event iterator.

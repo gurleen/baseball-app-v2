@@ -1,7 +1,7 @@
-import type { GameEvent } from "../../shared/events.ts";
-import type { GameSnapshot } from "../../shared/models.ts";
-import { replayMode } from "../mlb/replay.ts";
-import { GameWatcher, type WatcherDeps } from "./watcher.ts";
+import type { GameEvent } from '../../shared/events.ts';
+import type { GameSnapshot } from '../../shared/models.ts';
+import { replayMode } from '../mlb/replay.ts';
+import { GameWatcher, type WatcherDeps } from './watcher.ts';
 
 /**
  * How long a watcher keeps running after its last subscriber leaves.
@@ -64,7 +64,7 @@ export class GameRegistry {
 		const entry = this.#acquire(gamePk);
 		return entry.watcher.subscribe({
 			signal,
-			onClose: () => this.#release(gamePk),
+			onClose: () => this.#release(gamePk)
 		});
 	}
 
@@ -87,7 +87,7 @@ export class GameRegistry {
 
 		const entry: Entry = {
 			watcher: new GameWatcher(gamePk, this.#watcherDeps),
-			teardownTimer: null,
+			teardownTimer: null
 		};
 		this.#entries.set(gamePk, entry);
 		entry.watcher.start();
@@ -122,7 +122,7 @@ export class GameRegistry {
 			gamePk,
 			subscribers: entry.watcher.subscriberCount,
 			running: entry.watcher.isRunning,
-			...entry.watcher.stats,
+			...entry.watcher.stats
 		}));
 	}
 
@@ -148,6 +148,6 @@ export const gameRegistry = new GameRegistry(replayMode ? { watcherDeps: replayM
 
 if (replayMode) {
 	console.log(
-		`[registry] replaying fixture "${replayMode.label}" (game ${replayMode.gamePk}) instead of live MLB feeds`,
+		`[registry] replaying fixture "${replayMode.label}" (game ${replayMode.gamePk}) instead of live MLB feeds`
 	);
 }

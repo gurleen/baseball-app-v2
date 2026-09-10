@@ -1,62 +1,62 @@
 {
-  "name": "baseball-app",
-  "module": "src/server/index.ts",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/react-router-devtools": "^1.167.1",
-    "@tanstack/router-cli": "^1.167.30",
-    "@types/bun": "latest",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
-    "@vitejs/plugin-react": "^6.1.1",
-    "bun-plugin-tailwind": "^0.1.2",
-    "concurrently": "^10.0.5",
-    "drizzle-kit": "^0.31.10",
-    "postgres": "^3.4.9",
-    "tailwindcss": "^4.3.3",
-    "vite": "^8.2.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@hydra-tv/sports": "0.3.9",
-    "@hydra-tv/tokens": "^0.3.1",
-    "@hydra-tv/ui": "0.3.4",
-    "@orpc/client": "^1.15.0",
-    "@orpc/server": "^1.15.0",
-    "@orpc/tanstack-query": "^1.15.0",
-    "@tanstack/react-query": "^5.101.4",
-    "@tanstack/react-router": "1.170.18",
-    "@tanstack/react-table": "^8.21.3",
-    "drizzle-orm": "^0.45.2",
-    "fast-json-patch": "^3.1.1",
-    "monaco-editor": "0.54.0",
-    "monaco-sql-languages": "1.2.1",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "sql-formatter": "^15.8.2",
-    "zod": "^4.4.3"
-  },
-  "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"bun run dev:api\" \"bun run dev:web\"",
-    "dev:api": "bun --hot src/server/index.ts",
-    "dev:web": "vite",
-    "routes": "tsr watch",
-    "build": "vite build",
-    "start": "bun src/server/index.ts",
-    "typecheck": "tsc --noEmit",
-    "test": "bun test",
-    "validate-gumbo": "bun run scripts/validate-gumbo.ts",
-    "record-fixture": "bun run scripts/record-fixture.ts",
-    "check-join": "bun run scripts/check-join.ts",
-    "watch-game": "bun run scripts/watch-game.ts",
-    "dev:replay": "concurrently -n api,web -c blue,green \"BASEBALL_REPLAY=live bun --hot src/server/index.ts\" \"bun run dev:web\"",
-    "db:pull": "drizzle-kit pull"
-  },
-  "overrides": {
-    "@tanstack/router-core": "1.171.15"
-  }
+	"name": "baseball-app",
+	"module": "src/server/index.ts",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.3.3",
+		"@tanstack/react-router-devtools": "^1.167.1",
+		"@tanstack/router-cli": "^1.167.30",
+		"@types/bun": "latest",
+		"@types/react": "^19.2.18",
+		"@types/react-dom": "^19.2.4",
+		"@vitejs/plugin-react": "^6.1.1",
+		"bun-plugin-tailwind": "^0.1.2",
+		"concurrently": "^10.0.5",
+		"drizzle-kit": "^0.31.10",
+		"postgres": "^3.4.9",
+		"tailwindcss": "^4.3.3",
+		"vite": "^8.2.2"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@hydra-tv/sports": "0.3.9",
+		"@hydra-tv/tokens": "^0.3.1",
+		"@hydra-tv/ui": "0.3.4",
+		"@orpc/client": "^1.15.0",
+		"@orpc/server": "^1.15.0",
+		"@orpc/tanstack-query": "^1.15.0",
+		"@tanstack/react-query": "^5.101.4",
+		"@tanstack/react-router": "1.170.18",
+		"@tanstack/react-table": "^8.21.3",
+		"drizzle-orm": "^0.45.2",
+		"fast-json-patch": "^3.1.1",
+		"monaco-editor": "0.54.0",
+		"monaco-sql-languages": "1.2.1",
+		"react": "^19.2.8",
+		"react-dom": "^19.2.8",
+		"sql-formatter": "^15.8.2",
+		"zod": "^4.4.3"
+	},
+	"scripts": {
+		"dev": "concurrently -n api,web -c blue,green \"bun run dev:api\" \"bun run dev:web\"",
+		"dev:api": "bun --hot src/server/index.ts",
+		"dev:web": "vite",
+		"routes": "tsr watch",
+		"build": "vite build",
+		"start": "bun src/server/index.ts",
+		"typecheck": "tsc --noEmit",
+		"test": "bun test",
+		"validate-gumbo": "bun run scripts/validate-gumbo.ts",
+		"record-fixture": "bun run scripts/record-fixture.ts",
+		"check-join": "bun run scripts/check-join.ts",
+		"watch-game": "bun run scripts/watch-game.ts",
+		"dev:replay": "concurrently -n api,web -c blue,green \"BASEBALL_REPLAY=live bun --hot src/server/index.ts\" \"bun run dev:web\"",
+		"db:pull": "drizzle-kit pull"
+	},
+	"overrides": {
+		"@tanstack/router-core": "1.171.15"
+	}
 }

@@ -1,10 +1,10 @@
-import { ORPCError, os } from "@orpc/server";
-import { z } from "zod";
+import { ORPCError, os } from '@orpc/server';
+import { z } from 'zod';
 
-import type { GameEvent } from "../../shared/events.ts";
-import type { GameSnapshot } from "../../shared/models.ts";
-import { gameRegistry } from "../game/registry.ts";
-import { replayMode } from "../mlb/replay.ts";
+import type { GameEvent } from '../../shared/events.ts';
+import type { GameSnapshot } from '../../shared/models.ts';
+import { gameRegistry } from '../game/registry.ts';
+import { replayMode } from '../mlb/replay.ts';
 
 /**
  * A replay server has exactly one recorded game. Without this guard every
@@ -13,8 +13,8 @@ import { replayMode } from "../mlb/replay.ts";
  */
 function assertServable(gamePk: number): void {
 	if (replayMode && gamePk !== replayMode.gamePk) {
-		throw new ORPCError("NOT_FOUND", {
-			message: `Replaying fixture "${replayMode.label}", which only contains game ${replayMode.gamePk}.`,
+		throw new ORPCError('NOT_FOUND', {
+			message: `Replaying fixture "${replayMode.label}", which only contains game ${replayMode.gamePk}.`
 		});
 	}
 }
@@ -26,12 +26,10 @@ export const gameRouter = {
 	 * Current state without subscribing. Returns null if no watcher is running
 	 * for this game — callers who need state should subscribe instead.
 	 */
-	snapshot: os
-		.input(GameInput)
-		.handler(({ input }): GameSnapshot | null => {
-			assertServable(input.gamePk);
-			return gameRegistry.getSnapshot(input.gamePk);
-		}),
+	snapshot: os.input(GameInput).handler(({ input }): GameSnapshot | null => {
+		assertServable(input.gamePk);
+		return gameRegistry.getSnapshot(input.gamePk);
+	}),
 
 	/**
 	 * Live game stream. Yields one snapshot, then deltas.
@@ -40,8 +38,11 @@ export const gameRouter = {
 	 * every other call. `signal` aborts when the client disconnects, which
 	 * ends the iterator and releases the registry's reference to the watcher.
 	 */
-	subscribe: os.input(GameInput).handler(async function* ({ input, signal }): AsyncGenerator<GameEvent> {
+	subscribe: os.input(GameInput).handler(async function* ({
+		input,
+		signal
+	}): AsyncGenerator<GameEvent> {
 		assertServable(input.gamePk);
 		yield* gameRegistry.subscribe(input.gamePk, signal);
-	}),
+	})
 };

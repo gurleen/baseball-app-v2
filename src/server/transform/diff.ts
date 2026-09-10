@@ -1,5 +1,5 @@
-import type { GameEvent } from "../../shared/events.ts";
-import type { GameSnapshot, Pitch } from "../../shared/models.ts";
+import type { GameEvent } from '../../shared/events.ts';
+import type { GameSnapshot, Pitch } from '../../shared/models.ts';
 
 /**
  * Produces the delta events that carry `previous` forward to `next`.
@@ -10,7 +10,7 @@ import type { GameSnapshot, Pitch } from "../../shared/models.ts";
  * of this function; the round-trip is covered by tests.
  */
 export function diffSnapshots(previous: GameSnapshot | null, next: GameSnapshot): GameEvent[] {
-	if (!previous) return [{ t: "snapshot", snapshot: next }];
+	if (!previous) return [{ t: 'snapshot', snapshot: next }];
 
 	const events: GameEvent[] = [];
 
@@ -20,7 +20,7 @@ export function diffSnapshots(previous: GameSnapshot | null, next: GameSnapshot)
 		const before = seen.get(pitch.playId);
 
 		if (!before) {
-			events.push({ t: "pitch", pitch });
+			events.push({ t: 'pitch', pitch });
 			continue;
 		}
 
@@ -28,43 +28,43 @@ export function diffSnapshots(previous: GameSnapshot | null, next: GameSnapshot)
 		// miss-by can fill in on a later poll once the review resolves, so
 		// any metrics change is forwarded — not only null → present.
 		if (pitch.metrics && !shallowEqual(before.metrics, pitch.metrics)) {
-			events.push({ t: "pitchMetrics", playId: pitch.playId, metrics: pitch.metrics });
+			events.push({ t: 'pitchMetrics', playId: pitch.playId, metrics: pitch.metrics });
 		}
 	}
 
 	if (!shallowEqual(previous.pitchMixByPitcher, next.pitchMixByPitcher)) {
-		events.push({ t: "pitchMix", pitchMixByPitcher: next.pitchMixByPitcher });
+		events.push({ t: 'pitchMix', pitchMixByPitcher: next.pitchMixByPitcher });
 	}
 	if (!shallowEqual(previous.seasonPitchMixByPitcher, next.seasonPitchMixByPitcher)) {
-		events.push({ t: "seasonPitchMix", seasonPitchMixByPitcher: next.seasonPitchMixByPitcher });
+		events.push({ t: 'seasonPitchMix', seasonPitchMixByPitcher: next.seasonPitchMixByPitcher });
 	}
 
 	// Completed at-bats.
-	const previousPlays = new Set(previous.plays.map(play => play.atBatIndex));
+	const previousPlays = new Set(previous.plays.map((play) => play.atBatIndex));
 	for (const play of next.plays) {
-		if (!previousPlays.has(play.atBatIndex)) events.push({ t: "play", play });
+		if (!previousPlays.has(play.atBatIndex)) events.push({ t: 'play', play });
 	}
 
 	if (!shallowEqual(previous.currentPlay, next.currentPlay)) {
-		events.push({ t: "currentPlay", currentPlay: next.currentPlay });
+		events.push({ t: 'currentPlay', currentPlay: next.currentPlay });
 	}
 	if (!shallowEqual(previous.state, next.state)) {
-		events.push({ t: "state", state: next.state });
+		events.push({ t: 'state', state: next.state });
 	}
 	if (!shallowEqual(previous.linescore, next.linescore)) {
-		events.push({ t: "linescore", linescore: next.linescore });
+		events.push({ t: 'linescore', linescore: next.linescore });
 	}
 	if (!shallowEqual(previous.boxscore, next.boxscore)) {
-		events.push({ t: "boxscore", boxscore: next.boxscore });
+		events.push({ t: 'boxscore', boxscore: next.boxscore });
 	}
 	if (!shallowEqual(previous.abs, next.abs)) {
-		events.push({ t: "abs", abs: next.abs });
+		events.push({ t: 'abs', abs: next.abs });
 	}
 	if (!shallowEqual(previous.decisions, next.decisions)) {
-		events.push({ t: "decisions", decisions: next.decisions });
+		events.push({ t: 'decisions', decisions: next.decisions });
 	}
 	if (!shallowEqual(previous.gameInfo, next.gameInfo)) {
-		events.push({ t: "gameInfo", gameInfo: next.gameInfo });
+		events.push({ t: 'gameInfo', gameInfo: next.gameInfo });
 	}
 
 	return events;

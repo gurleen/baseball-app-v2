@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // ============================================================
 // Baseball Savant game feed (https://baseballsavant.mlb.com/gf?game_pk=)
@@ -17,9 +17,9 @@ import { z } from "zod";
 const numeric = z
 	.union([z.number(), z.string(), z.null()])
 	.optional()
-	.transform(value => {
-		if (value === null || value === undefined || value === "") return null;
-		const parsed = typeof value === "number" ? value : Number.parseFloat(value);
+	.transform((value) => {
+		if (value === null || value === undefined || value === '') return null;
+		const parsed = typeof value === 'number' ? value : Number.parseFloat(value);
 		return Number.isFinite(parsed) ? parsed : null;
 	});
 
@@ -27,11 +27,11 @@ const numeric = z
 const boolish = z
 	.union([z.boolean(), z.number(), z.string(), z.null()])
 	.optional()
-	.transform(value => {
-		if (value === null || value === undefined || value === "") return null;
-		if (typeof value === "boolean") return value;
-		if (typeof value === "number") return value !== 0;
-		return value === "Y" || value === "true" || value === "1";
+	.transform((value) => {
+		if (value === null || value === undefined || value === '') return null;
+		if (typeof value === 'boolean') return value;
+		if (typeof value === 'number') return value !== 0;
+		return value === 'Y' || value === 'true' || value === '1';
 	});
 
 /**
@@ -47,7 +47,7 @@ export const SavantAbsChallenge = z.looseObject({
 	edge_distance: numeric,
 	edge_distance_calc: numeric,
 	challenging_player_id: numeric,
-	challenging_player_type: z.string().nullish(),
+	challenging_player_type: z.string().nullish()
 });
 
 export type SavantAbsChallenge = z.infer<typeof SavantAbsChallenge>;
@@ -107,7 +107,7 @@ export const SavantPitchRow = z.looseObject({
 	is_barrel: boolish,
 	/** Batted-ball landing spot in feet from home plate; +x toward right field. */
 	hc_x_ft: numeric,
-	hc_y_ft: numeric,
+	hc_y_ft: numeric
 });
 
 export type SavantPitchRow = z.infer<typeof SavantPitchRow>;
@@ -119,7 +119,7 @@ export const SavantGameFeed = z.looseObject({
 	hasAbs: z.boolean().optional(),
 	team_home: z.array(SavantPitchRow).default([]),
 	team_away: z.array(SavantPitchRow).default([]),
-	exit_velocity: z.array(SavantPitchRow).default([]),
+	exit_velocity: z.array(SavantPitchRow).default([])
 });
 
 export type SavantGameFeed = z.infer<typeof SavantGameFeed>;

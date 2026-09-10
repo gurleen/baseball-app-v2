@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // ============================================================
 // MLB Stats API pitch arsenal
@@ -10,26 +10,26 @@ import { z } from "zod";
 
 export const PitchArsenalType = z.object({
 	code: z.string(),
-	description: z.string(),
+	description: z.string()
 });
 
 export const PitchArsenalStat = z.looseObject({
 	percentage: z.number(),
 	count: z.number(),
 	averageSpeed: z.number().optional(),
-	type: PitchArsenalType,
+	type: PitchArsenalType
 });
 
 export const PitchArsenalSplit = z.looseObject({
-	stat: PitchArsenalStat,
+	stat: PitchArsenalStat
 });
 
 export const PitchArsenalStats = z.looseObject({
-	splits: z.array(PitchArsenalSplit).optional(),
+	splits: z.array(PitchArsenalSplit).optional()
 });
 
 export const PitchArsenalResponse = z.object({
-	stats: z.array(PitchArsenalStats),
+	stats: z.array(PitchArsenalStats)
 });
 
 export type PitchArsenalType = z.infer<typeof PitchArsenalType>;

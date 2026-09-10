@@ -1,5 +1,5 @@
-import { sql, type SQL } from "drizzle-orm";
-import { z } from "zod";
+import { sql, type SQL } from 'drizzle-orm';
+import { z } from 'zod';
 
 export const SplitFilters = z.object({
 	seasonFrom: z.number().int().optional(),
@@ -7,15 +7,15 @@ export const SplitFilters = z.object({
 	dateFrom: z.string().optional(),
 	dateTo: z.string().optional(),
 	inning: z.number().int().optional(),
-	halfInning: z.enum(["top", "bottom"]).optional(),
+	halfInning: z.enum(['top', 'bottom']).optional(),
 	outsAfter: z.number().int().optional(),
 	balls: z.number().int().optional(),
 	strikes: z.number().int().optional(),
 	battingClubPk: z.number().int().optional(),
 	pitchingClubPk: z.number().int().optional(),
 	/** "B" = switch hitter (bats from either side depending on pitcher_hand). */
-	batterHand: z.enum(["L", "R", "B"]).optional(),
-	pitcherHand: z.enum(["L", "R"]).optional(),
+	batterHand: z.enum(['L', 'R', 'B']).optional(),
+	pitcherHand: z.enum(['L', 'R']).optional()
 });
 
 export type SplitFilters = z.infer<typeof SplitFilters>;
@@ -25,7 +25,10 @@ export type SplitFilters = z.infer<typeof SplitFilters>;
  * built from the given filters. `excludeClub` drops the club conditions —
  * used for the league-wide baseline population, which must span every club.
  */
-export function playFilterFragment(filters: SplitFilters, opts: { excludeClub?: boolean } = {}): SQL {
+export function playFilterFragment(
+	filters: SplitFilters,
+	opts: { excludeClub?: boolean } = {}
+): SQL {
 	const parts: SQL[] = [];
 
 	if (filters.seasonFrom !== undefined) parts.push(sql`season >= ${filters.seasonFrom}`);
@@ -38,8 +41,10 @@ export function playFilterFragment(filters: SplitFilters, opts: { excludeClub?: 
 	if (filters.balls !== undefined) parts.push(sql`balls = ${filters.balls}`);
 	if (filters.strikes !== undefined) parts.push(sql`strikes = ${filters.strikes}`);
 	if (!opts.excludeClub) {
-		if (filters.battingClubPk !== undefined) parts.push(sql`batting_club_pk = ${filters.battingClubPk}`);
-		if (filters.pitchingClubPk !== undefined) parts.push(sql`pitching_club_pk = ${filters.pitchingClubPk}`);
+		if (filters.battingClubPk !== undefined)
+			parts.push(sql`batting_club_pk = ${filters.battingClubPk}`);
+		if (filters.pitchingClubPk !== undefined)
+			parts.push(sql`pitching_club_pk = ${filters.pitchingClubPk}`);
 	}
 	if (filters.batterHand !== undefined) parts.push(sql`batter_hand = ${filters.batterHand}`);
 	if (filters.pitcherHand !== undefined) parts.push(sql`pitcher_hand = ${filters.pitcherHand}`);

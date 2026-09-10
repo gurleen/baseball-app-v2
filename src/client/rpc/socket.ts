@@ -77,13 +77,13 @@ export class ReconnectingSocket {
 			for (const listener of listeners) socket.addEventListener(type, listener);
 		}
 
-		socket.addEventListener("open", () => {
+		socket.addEventListener('open', () => {
 			this.#retryMs = INITIAL_RETRY_MS;
 			for (const message of this.#pending.splice(0)) socket.send(message);
 			this.#options.onOpen?.();
 		});
 
-		socket.addEventListener("close", () => {
+		socket.addEventListener('close', () => {
 			this.#options.onClose?.();
 			if (this.#closed) return;
 
@@ -96,6 +96,6 @@ export class ReconnectingSocket {
 
 		// Without a handler, a failed connection raises an unhandled error
 		// event; the close handler above owns the actual retry.
-		socket.addEventListener("error", () => {});
+		socket.addEventListener('error', () => {});
 	}
 }

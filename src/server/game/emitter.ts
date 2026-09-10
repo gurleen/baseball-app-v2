@@ -1,4 +1,4 @@
-import type { GameEvent } from "../../shared/events.ts";
+import type { GameEvent } from '../../shared/events.ts';
 
 /**
  * Events a single subscriber may fall behind by before it is resynced.
@@ -94,7 +94,7 @@ export class GameEventEmitter {
 	 */
 	subscribe(
 		initial: GameEvent[] = [],
-		options: { signal?: AbortSignal; onClose?: () => void } = {},
+		options: { signal?: AbortSignal; onClose?: () => void } = {}
 	): AsyncGenerator<GameEvent> {
 		const subscriber: Subscriber = { queue: [...initial], wake: null, closed: false };
 		this.#subscribers.add(subscriber);
@@ -103,7 +103,7 @@ export class GameEventEmitter {
 			subscriber.closed = true;
 			subscriber.wake?.();
 		};
-		options.signal?.addEventListener("abort", abort, { once: true });
+		options.signal?.addEventListener('abort', abort, { once: true });
 
 		// Idempotent: cleanup can be reached either by the generator's `finally`
 		// or by `return()`/`throw()` on a generator that was never started.
@@ -113,7 +113,7 @@ export class GameEventEmitter {
 			released = true;
 			subscriber.closed = true;
 			this.#subscribers.delete(subscriber);
-			options.signal?.removeEventListener("abort", abort);
+			options.signal?.removeEventListener('abort', abort);
 			options.onClose?.();
 		};
 
@@ -125,11 +125,11 @@ export class GameEventEmitter {
 		// reading, so `return`/`throw` release explicitly.
 		const close = stream.return.bind(stream);
 		const fail = stream.throw.bind(stream);
-		stream.return = async value => {
+		stream.return = async (value) => {
 			release();
 			return close(value);
 		};
-		stream.throw = async error => {
+		stream.throw = async (error) => {
 			release();
 			return fail(error);
 		};
@@ -146,7 +146,7 @@ export class GameEventEmitter {
 
 				if (subscriber.closed) return;
 
-				await new Promise<void>(resolve => {
+				await new Promise<void>((resolve) => {
 					subscriber.wake = () => {
 						subscriber.wake = null;
 						resolve();

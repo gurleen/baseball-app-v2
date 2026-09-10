@@ -1,13 +1,13 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from 'bun:test';
 
-import { loadGumboFixture } from "./fixtures.ts";
-import { toScheduleGameFromGumbo } from "../src/server/transform/schedule.ts";
+import { loadGumboFixture } from './fixtures.ts';
+import { toScheduleGameFromGumbo } from '../src/server/transform/schedule.ts';
 
-const live = toScheduleGameFromGumbo(await loadGumboFixture("live"));
-const final = toScheduleGameFromGumbo(await loadGumboFixture("final"));
+const live = toScheduleGameFromGumbo(await loadGumboFixture('live'));
+const final = toScheduleGameFromGumbo(await loadGumboFixture('final'));
 
-describe("toScheduleGameFromGumbo", () => {
-	test("a live game carries team logos keys, R/H/E and the current matchup", () => {
+describe('toScheduleGameFromGumbo', () => {
+	test('a live game carries team logos keys, R/H/E and the current matchup', () => {
 		expect(live.status.isLive).toBe(true);
 		expect(live.status.isFinal).toBe(false);
 		expect(live.situation).not.toBeNull();
@@ -16,9 +16,9 @@ describe("toScheduleGameFromGumbo", () => {
 			expect(side.id).toBeGreaterThan(0);
 			expect(side.shortName).toBeTruthy();
 			expect(side.abbreviation).toBeTruthy();
-			expect(typeof side.score).toBe("number");
-			expect(typeof side.hits).toBe("number");
-			expect(typeof side.errors).toBe("number");
+			expect(typeof side.score).toBe('number');
+			expect(typeof side.hits).toBe('number');
+			expect(typeof side.errors).toBe('number');
 		}
 
 		const pitcher = live.situation!.pitcher;
@@ -27,17 +27,17 @@ describe("toScheduleGameFromGumbo", () => {
 		expect(pitcher).not.toBeNull();
 		expect(pitcher!.id).toBeGreaterThan(0);
 		expect(pitcher!.lastName).toBeTruthy();
-		expect(pitcher!.lastName.includes(" ")).toBe(false);
+		expect(pitcher!.lastName.includes(' ')).toBe(false);
 
 		expect(batter).not.toBeNull();
 		expect(batter!.id).toBeGreaterThan(0);
 		expect(batter!.lastName).toBeTruthy();
-		expect(batter!.lastName.includes(" ")).toBe(false);
+		expect(batter!.lastName.includes(' ')).toBe(false);
 
 		expect(live.decisions).toBeNull();
 	});
 
-	test("live matchup stats are season lines, not the game log", () => {
+	test('live matchup stats are season lines, not the game log', () => {
 		const pitcher = live.situation!.pitcher!;
 		const batter = live.situation!.batter!;
 
@@ -47,7 +47,7 @@ describe("toScheduleGameFromGumbo", () => {
 		expect(batter.statsSummary).toMatch(/^\.\d+\/\.\d+\/\.\d+$/);
 	});
 
-	test("a final game drops the live situation and fills winner/loser", () => {
+	test('a final game drops the live situation and fills winner/loser', () => {
 		expect(final.status.isFinal).toBe(true);
 		expect(final.status.isLive).toBe(false);
 		expect(final.situation).toBeNull();
@@ -63,7 +63,7 @@ describe("toScheduleGameFromGumbo", () => {
 		expect(final.decisions!.loser!.gameSummary).toBeTruthy();
 	});
 
-	test("lastName prefers the roster last name over the full name", () => {
+	test('lastName prefers the roster last name over the full name', () => {
 		expect(live.teams.home.shortName).not.toBe(live.teams.home.name);
 		expect(final.teams.away.shortName).toBeTruthy();
 	});

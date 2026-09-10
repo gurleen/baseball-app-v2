@@ -1,6 +1,6 @@
-import type { BoxscorePlayer, BoxscoreTeamData, GumboFeed } from "../mlb/schemas/gumbo.ts";
-import type { BattingLine, PitchingLine, TeamBox } from "../../shared/models.ts";
-import { parsePlayerKey } from "./players.ts";
+import type { BoxscorePlayer, BoxscoreTeamData, GumboFeed } from '../mlb/schemas/gumbo.ts';
+import type { BattingLine, PitchingLine, TeamBox } from '../../shared/models.ts';
+import { parsePlayerKey } from './players.ts';
 
 // Row keys below match @hydra-tv/sports' BoxScore "batting" / "pitching"
 // presets exactly, so a TeamBox can be handed to the component untouched.
@@ -8,7 +8,7 @@ import { parsePlayerKey } from "./players.ts";
 // by the preset columns.
 
 /** MLB returns rate stats as strings ("​.315", "3.42") and sometimes omits them. */
-function rate(value: string | number | undefined, fallback = "-"): string {
+function rate(value: string | number | undefined, fallback = '-'): string {
 	if (value === undefined || value === null) return fallback;
 	return String(value);
 }
@@ -32,7 +32,7 @@ function parseBattingOrder(order: string | undefined) {
 	const sequence = Number.parseInt(order.slice(-2), 10);
 	return {
 		spot: Number.isFinite(spot) ? spot : null,
-		starter: sequence === 0,
+		starter: sequence === 0
 	};
 }
 
@@ -60,7 +60,7 @@ function toBattingLine(entry: BoxscorePlayer): BattingLine {
 		ops: rate(season.ops),
 		hr: count(season.homeRuns),
 		seasonRbi: count(season.rbi),
-		summary: summary(batting.summary),
+		summary: summary(batting.summary)
 	};
 }
 
@@ -72,7 +72,7 @@ function toPitchingLine(entry: BoxscorePlayer, isStarter: boolean): PitchingLine
 		playerId: entry.person.id,
 		name: entry.person.fullName,
 		starter: isStarter,
-		ip: rate(pitching.inningsPitched, "0.0"),
+		ip: rate(pitching.inningsPitched, '0.0'),
 		h: count(pitching.hits),
 		r: count(pitching.runs),
 		er: count(pitching.earnedRuns),
@@ -86,9 +86,9 @@ function toPitchingLine(entry: BoxscorePlayer, isStarter: boolean): PitchingLine
 		losses: count(season.losses),
 		whip: rate(season.whip),
 		seasonSo: count(season.strikeOuts),
-		seasonIp: rate(season.inningsPitched, "0.0"),
+		seasonIp: rate(season.inningsPitched, '0.0'),
 		bbPer9: rate(season.walksPer9Inn),
-		summary: summary(pitching.summary),
+		summary: summary(pitching.summary)
 	};
 }
 
@@ -120,18 +120,20 @@ function toTeamBox(side: BoxscoreTeamData): TeamBox {
 	const batting = lookup(byId, batterIds).map(toBattingLine);
 
 	const [starterId] = side.pitchers;
-	const pitching = lookup(byId, side.pitchers).map(entry => toPitchingLine(entry, entry.person.id === starterId));
+	const pitching = lookup(byId, side.pitchers).map((entry) =>
+		toPitchingLine(entry, entry.person.id === starterId)
+	);
 
-	const appearedBatterIds = new Set(batting.map(line => line.playerId));
-	const appearedPitcherIds = new Set(pitching.map(line => line.playerId));
+	const appearedBatterIds = new Set(batting.map((line) => line.playerId));
+	const appearedPitcherIds = new Set(pitching.map((line) => line.playerId));
 
 	const bench = lookup(byId, side.bench)
-		.filter(entry => !appearedBatterIds.has(entry.person.id))
+		.filter((entry) => !appearedBatterIds.has(entry.person.id))
 		.map(toBattingLine);
 
 	const bullpen = lookup(byId, side.bullpen)
-		.filter(entry => !appearedPitcherIds.has(entry.person.id))
-		.map(entry => toPitchingLine(entry, false));
+		.filter((entry) => !appearedPitcherIds.has(entry.person.id))
+		.map((entry) => toPitchingLine(entry, false));
 
 	const teamBatting = side.teamStats.batting;
 	const teamPitching = side.teamStats.pitching;
@@ -153,10 +155,10 @@ function toTeamBox(side: BoxscoreTeamData): TeamBox {
 			ops: rate(teamBatting.ops),
 			hr: count(teamBatting.homeRuns),
 			seasonRbi: count(teamBatting.rbi),
-			summary: summary(teamBatting.summary),
+			summary: summary(teamBatting.summary)
 		},
 		pitchingTotals: {
-			ip: rate(teamPitching.inningsPitched, "0.0"),
+			ip: rate(teamPitching.inningsPitched, '0.0'),
 			h: count(teamPitching.hits),
 			r: count(teamPitching.runs),
 			er: count(teamPitching.earnedRuns),
@@ -170,19 +172,19 @@ function toTeamBox(side: BoxscoreTeamData): TeamBox {
 			losses: count(teamPitching.losses),
 			whip: rate(teamPitching.whip),
 			seasonSo: count(teamPitching.strikeOuts),
-			seasonIp: rate(teamPitching.inningsPitched, "0.0"),
+			seasonIp: rate(teamPitching.inningsPitched, '0.0'),
 			bbPer9: rate(teamPitching.walksPer9Inn),
-			summary: summary(teamPitching.summary),
+			summary: summary(teamPitching.summary)
 		},
 		battingOrder: side.battingOrder,
 		bench,
-		bullpen,
+		bullpen
 	};
 }
 
 export function toBoxscore(feed: GumboFeed): { home: TeamBox; away: TeamBox } {
 	return {
 		home: toTeamBox(feed.liveData.boxscore.teams.home),
-		away: toTeamBox(feed.liveData.boxscore.teams.away),
+		away: toTeamBox(feed.liveData.boxscore.teams.away)
 	};
 }

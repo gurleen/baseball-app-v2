@@ -9,8 +9,8 @@ import type {
 	PitchMetrics,
 	Pitch,
 	PlaySummary,
-	TeamBox,
-} from "./models.ts";
+	TeamBox
+} from './models.ts';
 
 // ============================================================
 // The wire protocol between the game watcher and its subscribers.
@@ -22,28 +22,28 @@ import type {
 
 export type GameEvent =
 	/** Full state. Sent on join, and again whenever a subscriber falls behind. */
-	| { t: "snapshot"; snapshot: GameSnapshot }
+	| { t: 'snapshot'; snapshot: GameSnapshot }
 	/** A pitch was thrown. Statcast metrics may not have landed yet. */
-	| { t: "pitch"; pitch: Pitch }
+	| { t: 'pitch'; pitch: Pitch }
 	/**
 	 * Savant caught up on a pitch already delivered. Separate from `pitch`
 	 * because GUMBO runs about one pitch ahead of Savant during a live game —
 	 * waiting for both would visibly delay the pitch on screen.
 	 */
-	| { t: "pitchMetrics"; playId: string; metrics: PitchMetrics }
+	| { t: 'pitchMetrics'; playId: string; metrics: PitchMetrics }
 	/** An at-bat completed. */
-	| { t: "play"; play: PlaySummary }
+	| { t: 'play'; play: PlaySummary }
 	/** The at-bat in progress changed (new batter, or a pitch appended). */
-	| { t: "currentPlay"; currentPlay: LivePlay | null }
-	| { t: "linescore"; linescore: Linescore }
-	| { t: "state"; state: GameState }
-	| { t: "boxscore"; boxscore: { home: TeamBox; away: TeamBox } }
-	| { t: "abs"; abs: AbsChallengeState | null }
-	| { t: "decisions"; decisions: GameDecisions | null }
-	| { t: "gameInfo"; gameInfo: GameInfo }
-	| { t: "pitchMix"; pitchMixByPitcher: GameSnapshot["pitchMixByPitcher"] }
-	| { t: "seasonPitchMix"; seasonPitchMixByPitcher: GameSnapshot["seasonPitchMixByPitcher"] }
+	| { t: 'currentPlay'; currentPlay: LivePlay | null }
+	| { t: 'linescore'; linescore: Linescore }
+	| { t: 'state'; state: GameState }
+	| { t: 'boxscore'; boxscore: { home: TeamBox; away: TeamBox } }
+	| { t: 'abs'; abs: AbsChallengeState | null }
+	| { t: 'decisions'; decisions: GameDecisions | null }
+	| { t: 'gameInfo'; gameInfo: GameInfo }
+	| { t: 'pitchMix'; pitchMixByPitcher: GameSnapshot['pitchMixByPitcher'] }
+	| { t: 'seasonPitchMix'; seasonPitchMixByPitcher: GameSnapshot['seasonPitchMixByPitcher'] }
 	/** Keeps the socket warm and lets the client detect a stalled feed. */
-	| { t: "heartbeat"; at: number };
+	| { t: 'heartbeat'; at: number };
 
-export type GameEventType = GameEvent["t"];
+export type GameEventType = GameEvent['t'];

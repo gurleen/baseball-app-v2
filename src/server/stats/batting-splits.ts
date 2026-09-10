@@ -1,7 +1,11 @@
-import { sql } from "drizzle-orm";
+import { sql } from 'drizzle-orm';
 
-import { db } from "../db/client.ts";
-import { playFilterFragment, seasonDateFilterFragment, type SplitFilters } from "./split-filters.ts";
+import { db } from '../db/client.ts';
+import {
+	playFilterFragment,
+	seasonDateFilterFragment,
+	type SplitFilters
+} from './split-filters.ts';
 
 export interface BattingSplitRow {
 	batterPk: number;

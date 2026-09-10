@@ -1,6 +1,6 @@
-import type { GameEvent } from "../../shared/events.ts";
-import type { GameSnapshot } from "../../shared/models.ts";
-import { reduceGameEvent } from "./reducer.ts";
+import type { GameEvent } from '../../shared/events.ts';
+import type { GameSnapshot } from '../../shared/models.ts';
+import { reduceGameEvent } from './reducer.ts';
 
 /**
  * Holds two views of a game and the delay between them.
@@ -50,7 +50,7 @@ const EMPTY: GameStoreState = {
 	error: null,
 	lastDisplayedAt: null,
 	lastEventAt: null,
-	queued: 0,
+	queued: 0
 };
 
 export class GameStore {
@@ -84,10 +84,17 @@ export class GameStore {
 
 		// A snapshot is a resync — the delayed view would be wrong to keep
 		// replaying a queue built against the old state.
-		if (event.t === "snapshot") {
+		if (event.t === 'snapshot') {
 			this.#queue = [];
 			this.#clearTimer();
-			this.#set({ live, displayed: live, lastDisplayedAt: lastEventAt, lastEventAt, queued: 0, error: null });
+			this.#set({
+				live,
+				displayed: live,
+				lastDisplayedAt: lastEventAt,
+				lastEventAt,
+				queued: 0,
+				error: null
+			});
 			return;
 		}
 
@@ -153,7 +160,7 @@ export class GameStore {
 	#apply(event: GameEvent): void {
 		this.#set({
 			displayed: reduceGameEvent(this.#state.displayed, event),
-			lastDisplayedAt: this.#now(),
+			lastDisplayedAt: this.#now()
 		});
 	}
 
@@ -170,7 +177,7 @@ export class GameStore {
 			this.#state = {
 				...this.#state,
 				displayed: reduceGameEvent(this.#state.displayed, next.event),
-				lastDisplayedAt: this.#now(),
+				lastDisplayedAt: this.#now()
 			};
 			applied = true;
 		}
@@ -188,10 +195,13 @@ export class GameStore {
 		if (!next || this.#state.paused) return;
 
 		const visibleAt = next.receivedAt + this.#state.delayMs;
-		this.#timer = setTimeout(() => {
-			this.#timer = null;
-			this.#drain();
-		}, Math.max(0, visibleAt - this.#now()));
+		this.#timer = setTimeout(
+			() => {
+				this.#timer = null;
+				this.#drain();
+			},
+			Math.max(0, visibleAt - this.#now())
+		);
 	}
 
 	#clearTimer(): void {

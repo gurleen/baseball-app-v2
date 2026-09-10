@@ -1,8 +1,8 @@
-import type { WatcherDeps } from "../game/watcher.ts";
-import type { ScheduleGame } from "../procedures/schedule.ts";
-import { GumboFeed as GumboFeedSchema, type GumboFeed } from "./schemas/gumbo.ts";
-import { SavantGameFeed } from "./schemas/savant.ts";
-import { toScheduleGameFromGumbo } from "../transform/schedule.ts";
+import type { WatcherDeps } from '../game/watcher.ts';
+import type { ScheduleGame } from '../procedures/schedule.ts';
+import { GumboFeed as GumboFeedSchema, type GumboFeed } from './schemas/gumbo.ts';
+import { SavantGameFeed } from './schemas/savant.ts';
+import { toScheduleGameFromGumbo } from '../transform/schedule.ts';
 
 /**
  * Feed implementations backed by recorded fixtures instead of MLB.
@@ -42,7 +42,7 @@ async function readJsonGz(path: string): Promise<unknown> {
 }
 
 export async function createReplayMode(options: ReplayOptions): Promise<ReplayMode> {
-	const dir = options.fixturesDir ?? new URL("../../../test/fixtures/", import.meta.url).pathname;
+	const dir = options.fixturesDir ?? new URL('../../../test/fixtures/', import.meta.url).pathname;
 	const rewind = options.rewindPlays ?? 30;
 
 	const feed = GumboFeedSchema.parse(await readJsonGz(`${dir}${options.label}.gumbo.json.gz`));
@@ -64,9 +64,9 @@ export async function createReplayMode(options: ReplayOptions): Promise<ReplayMo
 					allPlays: plays,
 					// Treat the newest at-bat as the one in progress, so the
 					// currentPlay path is exercised too.
-					currentPlay: last && !last.about.isComplete ? last : undefined,
-				},
-			},
+					currentPlay: last && !last.about.isComplete ? last : undefined
+				}
+			}
 		};
 	}
 
@@ -83,8 +83,8 @@ export async function createReplayMode(options: ReplayOptions): Promise<ReplayMo
 				return rest;
 			},
 			fetchSavant: async () => savant,
-			fetchPitcherSeasonMix: async () => [],
-		},
+			fetchPitcherSeasonMix: async () => []
+		}
 	};
 }
 
@@ -94,6 +94,6 @@ export const replayMode: ReplayMode | null = process.env.BASEBALL_REPLAY
 			label: process.env.BASEBALL_REPLAY,
 			rewindPlays: process.env.BASEBALL_REPLAY_REWIND
 				? Number(process.env.BASEBALL_REPLAY_REWIND)
-				: undefined,
+				: undefined
 		})
 	: null;

@@ -1,31 +1,31 @@
-import type { GumboFeed } from "../mlb/schemas/gumbo.ts";
-import type { GameState, GameStatusKind, HalfInning } from "../../shared/models.ts";
+import type { GumboFeed } from '../mlb/schemas/gumbo.ts';
+import type { GameState, GameStatusKind, HalfInning } from '../../shared/models.ts';
 
 function toStatusKind(abstractCode: string): GameStatusKind {
 	switch (abstractCode) {
-		case "P":
-			return "preview";
-		case "L":
-			return "live";
-		case "F":
-			return "final";
+		case 'P':
+			return 'preview';
+		case 'L':
+			return 'live';
+		case 'F':
+			return 'final';
 		default:
-			return "other";
+			return 'other';
 	}
 }
 
 export function toHalfInning(value: string | undefined): HalfInning | null {
 	if (!value) return null;
 	const normalized = value.toLowerCase();
-	if (normalized === "top") return "top";
-	if (normalized === "bottom") return "bottom";
+	if (normalized === 'top') return 'top';
+	if (normalized === 'bottom') return 'bottom';
 	return null;
 }
 
 /** The linescore reports balls/strikes as strings in some feed versions. */
 function toCountValue(value: string | number | undefined): number {
-	if (typeof value === "number") return value;
-	if (typeof value === "string") {
+	if (typeof value === 'number') return value;
+	if (typeof value === 'string') {
 		const parsed = Number.parseInt(value, 10);
 		return Number.isFinite(parsed) ? parsed : 0;
 	}
@@ -54,13 +54,13 @@ export function toGameState(feed: GumboFeed): GameState {
 		outs: linescore.outs ?? 0,
 		count: {
 			balls: toCountValue(linescore.balls),
-			strikes: toCountValue(linescore.strikes),
+			strikes: toCountValue(linescore.strikes)
 		},
 		bases: {
 			first: offense?.first !== undefined,
 			second: offense?.second !== undefined,
-			third: offense?.third !== undefined,
+			third: offense?.third !== undefined
 		},
-		isFinal: kind === "final",
+		isFinal: kind === 'final'
 	};
 }

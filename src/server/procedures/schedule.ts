@@ -1,17 +1,17 @@
-import { os } from "@orpc/server";
-import { z } from "zod";
+import { os } from '@orpc/server';
+import { z } from 'zod';
 
-import { getSchedule } from "../mlb/schedule.ts";
-import { replayMode } from "../mlb/replay.ts";
-import { toScheduleGameFromMlb } from "../transform/schedule.ts";
-import type { HalfInning } from "../../shared/models.ts";
+import { getSchedule } from '../mlb/schedule.ts';
+import { replayMode } from '../mlb/replay.ts';
+import { toScheduleGameFromMlb } from '../transform/schedule.ts';
+import type { HalfInning } from '../../shared/models.ts';
 
 const ScheduleInput = z.object({
 	/** YYYY-MM-DD. Defaults to today in the server's timezone. */
 	date: z
 		.string()
 		.regex(/^\d{4}-\d{2}-\d{2}$/)
-		.optional(),
+		.optional()
 });
 
 export interface SchedulePlayer {
@@ -82,6 +82,6 @@ export const scheduleRouter = {
 
 		const response = await getSchedule({ date: input.date, signal });
 
-		return response.dates.flatMap(date => date.games.map(toScheduleGameFromMlb));
-	}),
+		return response.dates.flatMap((date) => date.games.map(toScheduleGameFromMlb));
+	})
 };

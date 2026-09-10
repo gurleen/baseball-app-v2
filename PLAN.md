@@ -10,7 +10,7 @@ by a new oRPC procedure that reads `batting_stats_season`.
   even if the player was traded.
 - Club(s) for a player-season come from `plays` (`battingClubPk`, `batterPk`,
   `season`): `SELECT DISTINCT batting_club_pk FROM plays WHERE batter_pk = ?
-  AND season = ?`. Join distinct club count against `clubsHistory`
+AND season = ?`. Join distinct club count against `clubsHistory`
   (`clubPk`, `season`, `abbreviation`) — season-scoped so an abbreviation is
   correct even for relocated/renamed franchises.
   - 1 club → that club's `abbreviation`.
@@ -36,8 +36,8 @@ by a new oRPC procedure that reads `batting_stats_season`.
   3. Merge in the handler (or via a single SQL query with a CTE/window —
      prefer one query with drizzle `sql` if it stays readable) into one row
      per player: `{ batterPk, name, club, pa, ab, h, singles, doubles,
-     triples, homeRuns, bb, ibb, hbp, so, sf, sh, tb, avg, obp, slg, ops,
-     bbPct, kPct, bbK, iso, babip, woba, wrcPlus, qualified }`.
+triples, homeRuns, bb, ibb, hbp, so, sf, sh, tb, avg, obp, slg, ops,
+bbPct, kPct, bbK, iso, babip, woba, wrcPlus, qualified }`.
   4. Also expose a `seasons` query (or reuse `distinct season` from
      `battingStatsSeason`) so the client can populate the year dropdown
      without hardcoding a range.
@@ -104,6 +104,7 @@ Install with `bun add @tanstack/react-table@^8` (already a dependency now,
 pinned `^8.21.3`, so pitching just imports the same package).
 
 Sort mechanics worth reusing as-is:
+
 - `useState<SortingState>([{ id: "pa", desc: true }])` (or the pitching
   equivalent's headline counting stat) as the default sort, so the initial
   view matches what the server already returns.
@@ -142,10 +143,12 @@ Sort mechanics worth reusing as-is:
 `battingStatsSeason` (and by extension `pitchingStatsSeason`) has no club
 column — it's `pgView`, keyed only by `(batterPk|pitcherPk, season)`. Club is
 derived from `plays` via a CTE:
+
 ```
 count(distinct battingClubPk)::int as club_count,
 min(battingClubPk)::int as single_club_pk
 ```
+
 grouped by `batterPk`, filtered to the season, then left-joined back;
 `clubsHistory` is joined on `(clubPk, season)` (not a bare `clubPk` join —
 abbreviations are season-scoped for relocated/renamed franchises). Cast the

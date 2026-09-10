@@ -34,7 +34,7 @@ src/client/
 
 **The boundary that matters:** raw GUMBO/Savant schemas live only in
 `src/server/mlb/schemas/` and never reach the client. The client imports
-`src/shared/` plus the router *type*. `test/boundaries.test.ts` enforces this —
+`src/shared/` plus the router _type_. `test/boundaries.test.ts` enforces this —
 a value import from `src/server/` fails the suite.
 
 **Data flow.** `GameWatcher` polls GUMBO (2s live) and Savant (12s live),
@@ -53,7 +53,7 @@ broadcast that lags the data feed. Calibrate in the game's SETTINGS tab.
 
 - **Pin TanStack Router.** `@tanstack/router-core` >= 1.171.18 has an ESM cycle
   Bun's bundler mishandles (`Cannot read properties of null (reading
-  'replaceRouteChunk')`). `react-router` is pinned to 1.170.18 with an
+'replaceRouteChunk')`). `react-router` is pinned to 1.170.18 with an
   `overrides` entry forcing router-core 1.171.15. Typecheck and build both pass
   when this breaks — only loading the page catches it.
 - **Vite owns the client bundle in dev *and* production.** `bun run build` is
@@ -83,7 +83,7 @@ broadcast that lags the data feed. Calibrate in the game's SETTINGS tab.
   relative` wrapper for exactly this reason.
 - **Savant `no_pitch` rows carry no `play_id`** (replay-review automatic strikes,
   timer violations) and are dropped when indexing. Batted-ball fields are
-  string-encoded; bat speed appears on *any* swing including check swings, which
+  string-encoded; bat speed appears on _any_ swing including check swings, which
   is why `PitchMetrics` splits `swing` from `battedBall`.
 - **Grid items default to `min-width: auto`** and will push the page sideways
   rather than shrink. Use the helpers in `client/lib/layout.ts`.

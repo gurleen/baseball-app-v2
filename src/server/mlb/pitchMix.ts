@@ -1,5 +1,5 @@
-import { mlbClient } from "./client";
-import { PitchArsenalResponse } from "./schemas/pitchArsenal";
+import { mlbClient } from './client';
+import { PitchArsenalResponse } from './schemas/pitchArsenal';
 
 export interface PitcherPitchArsenalQuery {
 	signal?: AbortSignal;
@@ -12,16 +12,16 @@ export interface PitcherPitchArsenalQuery {
 export function getPitcherPitchArsenal(
 	personId: number,
 	season: string | number,
-	query: PitcherPitchArsenalQuery = {},
+	query: PitcherPitchArsenalQuery = {}
 ) {
 	return mlbClient.request({
 		path: `/people/${personId}/stats`,
 		params: {
-			stats: "pitchArsenal",
-			group: "pitching",
-			season,
+			stats: 'pitchArsenal',
+			group: 'pitching',
+			season
 		},
 		schema: PitchArsenalResponse,
-		signal: query.signal,
+		signal: query.signal
 	});
 }

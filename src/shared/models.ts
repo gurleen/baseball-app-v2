@@ -12,8 +12,8 @@
 
 // ---------- primitives ----------
 
-export type Handedness = "L" | "R" | "S";
-export type HalfInning = "top" | "bottom";
+export type Handedness = 'L' | 'R' | 'S';
+export type HalfInning = 'top' | 'bottom';
 
 export interface TeamRef {
 	id: number;
@@ -93,7 +93,7 @@ export interface BattedBallMetrics {
 }
 
 /** How a pitch was resolved, in the vocabulary @hydra-tv/sports colors by. */
-export type PitchKind = "ball" | "strike" | "foul" | "inplay" | "hbp";
+export type PitchKind = 'ball' | 'strike' | 'foul' | 'inplay' | 'hbp';
 
 export interface PitchCall {
 	code: string;
@@ -207,7 +207,7 @@ export interface LivePlay {
 
 // ---------- game state ----------
 
-export type GameStatusKind = "preview" | "live" | "final" | "other";
+export type GameStatusKind = 'preview' | 'live' | 'final' | 'other';
 
 export interface GameState {
 	kind: GameStatusKind;
@@ -225,7 +225,7 @@ export interface GameState {
 }
 
 /** One inning's runs. `null` = not yet played, `"X"` = home half never batted. */
-export type InningRuns = number | null | "X";
+export type InningRuns = number | null | 'X';
 
 export interface LinescoreSide {
 	runs: number;
@@ -299,8 +299,8 @@ export interface PitchingLine {
 export interface TeamBox {
 	batting: BattingLine[];
 	pitching: PitchingLine[];
-	battingTotals: Omit<BattingLine, "playerId" | "name" | "position" | "starter" | "battingOrder">;
-	pitchingTotals: Omit<PitchingLine, "playerId" | "name" | "starter">;
+	battingTotals: Omit<BattingLine, 'playerId' | 'name' | 'position' | 'starter' | 'battingOrder'>;
+	pitchingTotals: Omit<PitchingLine, 'playerId' | 'name' | 'starter'>;
 	/** Current lineup, batting-spot order. */
 	battingOrder: number[];
 	bench: BattingLine[];

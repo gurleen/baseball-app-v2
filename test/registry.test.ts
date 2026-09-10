@@ -1,13 +1,13 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from 'bun:test';
 
-import { GameRegistry } from "../src/server/game/registry.ts";
-import { GameEventEmitter } from "../src/server/game/emitter.ts";
-import type { WatcherDeps } from "../src/server/game/watcher.ts";
-import type { GameEvent } from "../src/shared/events.ts";
-import { loadGumboFixture, loadSavantFixture } from "./fixtures.ts";
+import { GameRegistry } from '../src/server/game/registry.ts';
+import { GameEventEmitter } from '../src/server/game/emitter.ts';
+import type { WatcherDeps } from '../src/server/game/watcher.ts';
+import type { GameEvent } from '../src/shared/events.ts';
+import { loadGumboFixture, loadSavantFixture } from './fixtures.ts';
 
-const gumbo = await loadGumboFixture("live");
-const savant = await loadSavantFixture("live");
+const gumbo = await loadGumboFixture('live');
+const savant = await loadSavantFixture('live');
 
 /** Counts upstream calls so the "one fetch per game" property can be asserted. */
 function stubDeps() {
@@ -27,7 +27,7 @@ function stubDeps() {
 			return savant;
 		},
 		fetchPitcherSeasonMix: async () => [],
-		now: () => 1_700_000_000_000,
+		now: () => 1_700_000_000_000
 	};
 
 	return { calls, deps };
@@ -43,8 +43,8 @@ async function take(stream: AsyncGenerator<GameEvent>, count: number): Promise<G
 	return events;
 }
 
-describe("GameRegistry", () => {
-	test("two subscribers to one game share a single upstream fetch", async () => {
+describe('GameRegistry', () => {
+	test('two subscribers to one game share a single upstream fetch', async () => {
 		const { calls, deps } = stubDeps();
 		const registry = new GameRegistry({ watcherDeps: deps, teardownGraceMs: 10_000 });
 
@@ -52,8 +52,8 @@ describe("GameRegistry", () => {
 		const second = await take(registry.subscribe(1), 1);
 
 		// Both got the full state...
-		expect(first[0]!.t).toBe("snapshot");
-		expect(second[0]!.t).toBe("snapshot");
+		expect(first[0]!.t).toBe('snapshot');
+		expect(second[0]!.t).toBe('snapshot');
 		// ...but the game was only fetched once.
 		expect(calls.gumbo).toBe(1);
 		expect(registry.watcherCount).toBe(1);
@@ -61,7 +61,7 @@ describe("GameRegistry", () => {
 		registry.stopAll();
 	});
 
-	test("the second subscriber gets the cached snapshot immediately", async () => {
+	test('the second subscriber gets the cached snapshot immediately', async () => {
 		const { calls, deps } = stubDeps();
 		const registry = new GameRegistry({ watcherDeps: deps });
 
@@ -71,13 +71,13 @@ describe("GameRegistry", () => {
 		const events = await take(registry.subscribe(2), 1);
 
 		expect(events).toHaveLength(1);
-		expect(events[0]!.t).toBe("snapshot");
+		expect(events[0]!.t).toBe('snapshot');
 		expect(calls.gumbo).toBe(before);
 
 		registry.stopAll();
 	});
 
-	test("different games get their own watchers", async () => {
+	test('different games get their own watchers', async () => {
 		const { deps } = stubDeps();
 		const registry = new GameRegistry({ watcherDeps: deps });
 
@@ -104,7 +104,7 @@ describe("GameRegistry", () => {
 		registry.stopAll();
 	});
 
-	test("the watcher is torn down once the grace window elapses", async () => {
+	test('the watcher is torn down once the grace window elapses', async () => {
 		const { deps } = stubDeps();
 		const registry = new GameRegistry({ watcherDeps: deps, teardownGraceMs: 20 });
 
@@ -117,7 +117,7 @@ describe("GameRegistry", () => {
 		registry.stopAll();
 	});
 
-	test("refuses to exceed the watcher cap", async () => {
+	test('refuses to exceed the watcher cap', async () => {
 		const { deps } = stubDeps();
 		const registry = new GameRegistry({ watcherDeps: deps, maxWatchers: 2 });
 
@@ -129,10 +129,10 @@ describe("GameRegistry", () => {
 	});
 });
 
-describe("GameEventEmitter", () => {
-	const heartbeat = (at: number): GameEvent => ({ t: "heartbeat", at });
+describe('GameEventEmitter', () => {
+	const heartbeat = (at: number): GameEvent => ({ t: 'heartbeat', at });
 
-	test("delivers initial events before live ones", async () => {
+	test('delivers initial events before live ones', async () => {
 		const emitter = new GameEventEmitter();
 		const stream = emitter.subscribe([heartbeat(1)]);
 
@@ -146,7 +146,7 @@ describe("GameEventEmitter", () => {
 		await stream.return(undefined);
 	});
 
-	test("fans one event out to every subscriber", async () => {
+	test('fans one event out to every subscriber', async () => {
 		const emitter = new GameEventEmitter();
 		const a = emitter.subscribe();
 		const b = emitter.subscribe();
@@ -163,8 +163,8 @@ describe("GameEventEmitter", () => {
 		await b.return(undefined);
 	});
 
-	test("a slow subscriber is resynced instead of stalling the emitter", async () => {
-		const resync: GameEvent = { t: "heartbeat", at: -1 };
+	test('a slow subscriber is resynced instead of stalling the emitter', async () => {
+		const resync: GameEvent = { t: 'heartbeat', at: -1 };
 		const emitter = new GameEventEmitter({ queueLimit: 4, onOverflow: () => resync });
 
 		const stream = emitter.subscribe();
@@ -178,7 +178,7 @@ describe("GameEventEmitter", () => {
 		await stream.return(undefined);
 	});
 
-	test("onClose fires however iteration ends", async () => {
+	test('onClose fires however iteration ends', async () => {
 		const emitter = new GameEventEmitter();
 		let closed = 0;
 
@@ -190,7 +190,7 @@ describe("GameEventEmitter", () => {
 		expect(emitter.subscriberCount).toBe(0);
 	});
 
-	test("aborting the signal ends the stream", async () => {
+	test('aborting the signal ends the stream', async () => {
 		const emitter = new GameEventEmitter();
 		const controller = new AbortController();
 		const stream = emitter.subscribe([], { signal: controller.signal });
@@ -203,23 +203,23 @@ describe("GameEventEmitter", () => {
 	});
 });
 
-describe("subscriber registration timing", () => {
-	test("events emitted before the first read are not lost", async () => {
+describe('subscriber registration timing', () => {
+	test('events emitted before the first read are not lost', async () => {
 		// Async generator bodies are lazy, so a subscriber registered inside one
 		// would miss everything emitted before the consumer's first next().
 		const emitter = new GameEventEmitter();
 		const stream = emitter.subscribe();
 
 		expect(emitter.subscriberCount).toBe(1);
-		emitter.emit({ t: "heartbeat", at: 42 });
+		emitter.emit({ t: 'heartbeat', at: 42 });
 
 		const first = await stream.next();
-		expect(first.value).toEqual({ t: "heartbeat", at: 42 });
+		expect(first.value).toEqual({ t: 'heartbeat', at: 42 });
 
 		await stream.return(undefined);
 	});
 
-	test("the registry counts a subscriber before it starts reading", async () => {
+	test('the registry counts a subscriber before it starts reading', async () => {
 		const { deps } = stubDeps();
 		const registry = new GameRegistry({ watcherDeps: deps, teardownGraceMs: 10_000 });
 

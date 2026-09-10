@@ -1,17 +1,17 @@
 {
-  "version": "0.0.1",
-  "configurations": [
-    {
-      "name": "baseball-app",
-      "runtimeExecutable": "bun",
-      "runtimeArgs": ["--hot", "src/server/index.ts"],
-      "port": 3030
-    },
-    {
-      "name": "baseball-app-replay",
-      "runtimeExecutable": "sh",
-      "runtimeArgs": ["-c", "BASEBALL_REPLAY=live bun --hot src/server/index.ts"],
-      "port": 3001
-    }
-  ]
+	"version": "0.0.1",
+	"configurations": [
+		{
+			"name": "baseball-app",
+			"runtimeExecutable": "bun",
+			"runtimeArgs": ["--hot", "src/server/index.ts"],
+			"port": 3030
+		},
+		{
+			"name": "baseball-app-replay",
+			"runtimeExecutable": "sh",
+			"runtimeArgs": ["-c", "BASEBALL_REPLAY=live bun --hot src/server/index.ts"],
+			"port": 3001
+		}
+	]
 }

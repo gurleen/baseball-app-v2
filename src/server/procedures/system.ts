@@ -1,6 +1,6 @@
-import { os } from "@orpc/server";
+import { os } from '@orpc/server';
 
-import { replayMode } from "../mlb/replay.ts";
+import { replayMode } from '../mlb/replay.ts';
 
 export const systemRouter = {
 	/**
@@ -8,6 +8,6 @@ export const systemRouter = {
 	 * recorded data is never mistaken for a live game.
 	 */
 	info: os.handler(() => ({
-		replay: replayMode ? { label: replayMode.label, gamePk: replayMode.gamePk } : null,
-	})),
+		replay: replayMode ? { label: replayMode.label, gamePk: replayMode.gamePk } : null
+	}))
 };

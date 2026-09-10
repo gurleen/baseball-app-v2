@@ -1,17 +1,39 @@
-import { os } from "@orpc/server";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { z } from "zod";
+import { os } from '@orpc/server';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
-import { db } from "../db/client.ts";
-import { clubsHistory, people, pitchingStatsSeason, plays } from "../db/schema.ts";
-import { listClubs, type ClubOption } from "../stats/clubs.ts";
-import { pitchingSplits, type PitchingSplitRow } from "../stats/pitching-splits.ts";
-import { SplitFilters } from "../stats/split-filters.ts";
+import { db } from '../db/client.ts';
+import { clubsHistory, people, pitchingStatsSeason, plays, statcastPitchArsenal } from '../db/schema.ts';
+import { listClubs, type ClubOption } from '../stats/clubs.ts';
+import { pitchingSplits, type PitchingSplitRow } from '../stats/pitching-splits.ts';
+import { SplitFilters } from '../stats/split-filters.ts';
 
 const LeadersInput = z.object({
 	season: z.number().int(),
-	qualifiedOnly: z.boolean().optional(),
+	qualifiedOnly: z.boolean().optional()
 });
+
+const ArsenalInput = z.object({
+	pitcherPk: z.number().int(),
+	season: z.number().int()
+});
+
+export interface PitchArsenalRow {
+	pitchType: string | null;
+	pitchName: string | null;
+	pitches: number;
+	usagePct: number | null;
+	avgVelocity: number | null;
+	maxVelocity: number | null;
+	avgSpinRate: number | null;
+	avgExtension: number | null;
+	avgHorizontalBreak: number | null;
+	avgInducedVerticalBreak: number | null;
+	whiffPct: number | null;
+	chasePct: number | null;
+	zonePct: number | null;
+	putawayPct: number | null;
+}
 
 export interface PitchingLeader {
 	pitcherPk: number;
@@ -47,7 +69,7 @@ export interface PitchingLeader {
 
 function toNumber(value: string | number | null): number | null {
 	if (value === null) return null;
-	return typeof value === "number" ? value : Number.parseFloat(value);
+	return typeof value === 'number' ? value : Number.parseFloat(value);
 }
 
 export const pitchingRouter = {
@@ -58,7 +80,7 @@ export const pitchingRouter = {
 			.from(pitchingStatsSeason)
 			.orderBy(desc(pitchingStatsSeason.season));
 
-		return rows.map(row => row.season!);
+		return rows.map((row) => row.season!);
 	}),
 
 	/** Clubs for the split filter's club dropdown. */
@@ -70,16 +92,16 @@ export const pitchingRouter = {
 		// distinct pitching_club_pk per pitcher. A single club resolves to its
 		// abbreviation; more than one collapses to "NTM" (e.g. "2TM"), matching
 		// the standard "traded player" convention.
-		const clubCounts = db.$with("club_counts").as(
+		const clubCounts = db.$with('club_counts').as(
 			db
 				.select({
 					pitcherPk: plays.pitcherPk,
-					clubCount: sql<number>`count(distinct ${plays.pitchingClubPk})::int`.as("club_count"),
-					singleClubPk: sql<number>`min(${plays.pitchingClubPk})::int`.as("single_club_pk"),
+					clubCount: sql<number>`count(distinct ${plays.pitchingClubPk})::int`.as('club_count'),
+					singleClubPk: sql<number>`min(${plays.pitchingClubPk})::int`.as('single_club_pk')
 				})
 				.from(plays)
 				.where(eq(plays.season, input.season))
-				.groupBy(plays.pitcherPk),
+				.groupBy(plays.pitcherPk)
 		);
 
 		const rows = await db
@@ -114,27 +136,35 @@ export const pitchingRouter = {
 				babip: pitchingStatsSeason.babip,
 				fip: pitchingStatsSeason.fip,
 				lobPct: pitchingStatsSeason.lobPct,
-				qualified: pitchingStatsSeason.qualified,
+				qualified: pitchingStatsSeason.qualified
 			})
 			.from(pitchingStatsSeason)
 			.innerJoin(people, eq(people.pk, pitchingStatsSeason.pitcherPk))
 			.leftJoin(clubCounts, eq(clubCounts.pitcherPk, pitchingStatsSeason.pitcherPk))
 			.leftJoin(
 				clubsHistory,
-				and(eq(clubsHistory.clubPk, clubCounts.singleClubPk), eq(clubsHistory.season, pitchingStatsSeason.season)),
+				and(
+					eq(clubsHistory.clubPk, clubCounts.singleClubPk),
+					eq(clubsHistory.season, pitchingStatsSeason.season)
+				)
 			)
 			.where(
 				and(
 					eq(pitchingStatsSeason.season, input.season),
-					input.qualifiedOnly ? eq(pitchingStatsSeason.qualified, true) : undefined,
-				),
+					input.qualifiedOnly ? eq(pitchingStatsSeason.qualified, true) : undefined
+				)
 			)
 			.orderBy(desc(pitchingStatsSeason.ip));
 
-		return rows.map(row => ({
+		return rows.map((row) => ({
 			pitcherPk: row.pitcherPk!,
-			name: `${row.firstName ?? ""} ${row.lastName ?? ""}`.trim(),
-			club: row.clubCount == null || row.clubCount === 0 ? null : row.clubCount === 1 ? row.clubAbbreviation : `${row.clubCount}TM`,
+			name: `${row.firstName ?? ''} ${row.lastName ?? ''}`.trim(),
+			club:
+				row.clubCount == null || row.clubCount === 0
+					? null
+					: row.clubCount === 1
+						? row.clubAbbreviation
+						: `${row.clubCount}TM`,
 			pa: row.pa ?? 0,
 			ip: toNumber(row.ip),
 			outs: row.outs ?? 0,
@@ -159,7 +189,7 @@ export const pitchingRouter = {
 			babip: toNumber(row.babip),
 			fip: toNumber(row.fip),
 			lobPct: toNumber(row.lobPct),
-			qualified: row.qualified ?? false,
+			qualified: row.qualified ?? false
 		}));
 	}),
 
@@ -169,47 +199,97 @@ export const pitchingRouter = {
 	 * `qualified` is the 1-IP-per-team-game convention scoped to the split's
 	 * own season/date range, not a fixed season-long threshold.
 	 */
-	splits: os.input(SplitFilters.extend({ qualifiedOnly: z.boolean().optional() })).handler(async ({ input }): Promise<Omit<PitchingLeader, "club">[]> => {
-		const rows = await pitchingSplits(input);
-		if (rows.length === 0) return [];
+	splits: os
+		.input(SplitFilters.extend({ qualifiedOnly: z.boolean().optional() }))
+		.handler(async ({ input }): Promise<Omit<PitchingLeader, 'club'>[]> => {
+			const rows = await pitchingSplits(input);
+			if (rows.length === 0) return [];
 
-		const pitcherPks = rows.map(row => row.pitcherPk);
-		const peopleRows = await db
-			.select({ pk: people.pk, firstName: people.firstName, lastName: people.lastName })
-			.from(people)
-			.where(inArray(people.pk, pitcherPks));
-		const namesByPk = new Map(peopleRows.map(p => [p.pk, `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim()]));
+			const pitcherPks = rows.map((row) => row.pitcherPk);
+			const peopleRows = await db
+				.select({ pk: people.pk, firstName: people.firstName, lastName: people.lastName })
+				.from(people)
+				.where(inArray(people.pk, pitcherPks));
+			const namesByPk = new Map(
+				peopleRows.map((p) => [p.pk, `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()])
+			);
 
-		const filteredRows = input.qualifiedOnly ? rows.filter(row => row.qualified) : rows;
+			const filteredRows = input.qualifiedOnly ? rows.filter((row) => row.qualified) : rows;
 
-		return filteredRows.map((row: PitchingSplitRow) => ({
-			pitcherPk: row.pitcherPk,
-			name: namesByPk.get(row.pitcherPk) ?? "",
-			pa: row.pa,
-			ip: toNumber(row.ip),
-			outs: row.outs,
-			h: row.h,
-			singles: row.singles,
-			doubles: row.doubles,
-			triples: row.triples,
-			homeRuns: row.homeRuns,
-			bb: row.bb,
-			ibb: row.ibb,
-			hbp: row.hbp,
-			so: row.so,
-			sf: row.sf,
-			sh: row.sh,
-			runs: row.runs,
-			earnedRuns: row.earnedRuns,
-			era: toNumber(row.era),
-			whip: toNumber(row.whip),
-			k9: toNumber(row.k9),
-			bb9: toNumber(row.bb9),
-			hr9: toNumber(row.hr9),
-			babip: toNumber(row.babip),
-			fip: toNumber(row.fip),
-			lobPct: toNumber(row.lobPct),
-			qualified: row.qualified,
+			return filteredRows.map((row: PitchingSplitRow) => ({
+				pitcherPk: row.pitcherPk,
+				name: namesByPk.get(row.pitcherPk) ?? '',
+				pa: row.pa,
+				ip: toNumber(row.ip),
+				outs: row.outs,
+				h: row.h,
+				singles: row.singles,
+				doubles: row.doubles,
+				triples: row.triples,
+				homeRuns: row.homeRuns,
+				bb: row.bb,
+				ibb: row.ibb,
+				hbp: row.hbp,
+				so: row.so,
+				sf: row.sf,
+				sh: row.sh,
+				runs: row.runs,
+				earnedRuns: row.earnedRuns,
+				era: toNumber(row.era),
+				whip: toNumber(row.whip),
+				k9: toNumber(row.k9),
+				bb9: toNumber(row.bb9),
+				hr9: toNumber(row.hr9),
+				babip: toNumber(row.babip),
+				fip: toNumber(row.fip),
+				lobPct: toNumber(row.lobPct),
+				qualified: row.qualified
+			}));
+		}),
+
+	/** Statcast pitch arsenal for one pitcher/season, most-thrown pitch first. */
+	arsenal: os.input(ArsenalInput).handler(async ({ input }): Promise<PitchArsenalRow[]> => {
+		const rows = await db
+			.select({
+				pitchType: statcastPitchArsenal.pitchType,
+				pitchName: statcastPitchArsenal.pitchName,
+				pitches: statcastPitchArsenal.pitches,
+				usagePct: statcastPitchArsenal.usagePct,
+				avgVelocity: statcastPitchArsenal.avgVelocity,
+				maxVelocity: statcastPitchArsenal.maxVelocity,
+				avgSpinRate: statcastPitchArsenal.avgSpinRate,
+				avgExtension: statcastPitchArsenal.avgExtension,
+				avgHorizontalBreak: statcastPitchArsenal.avgHorizontalBreak,
+				avgInducedVerticalBreak: statcastPitchArsenal.avgInducedVerticalBreak,
+				whiffPct: statcastPitchArsenal.whiffPct,
+				chasePct: statcastPitchArsenal.chasePct,
+				zonePct: statcastPitchArsenal.zonePct,
+				putawayPct: statcastPitchArsenal.putawayPct
+			})
+			.from(statcastPitchArsenal)
+			.where(
+				and(
+					eq(statcastPitchArsenal.pitcherPk, input.pitcherPk),
+					eq(statcastPitchArsenal.season, input.season)
+				)
+			)
+			.orderBy(desc(statcastPitchArsenal.pitches));
+
+		return rows.map((row) => ({
+			pitchType: row.pitchType,
+			pitchName: row.pitchName,
+			pitches: row.pitches ?? 0,
+			usagePct: toNumber(row.usagePct),
+			avgVelocity: row.avgVelocity,
+			maxVelocity: row.maxVelocity,
+			avgSpinRate: toNumber(row.avgSpinRate),
+			avgExtension: row.avgExtension,
+			avgHorizontalBreak: row.avgHorizontalBreak,
+			avgInducedVerticalBreak: row.avgInducedVerticalBreak,
+			whiffPct: toNumber(row.whiffPct),
+			chasePct: toNumber(row.chasePct),
+			zonePct: toNumber(row.zonePct),
+			putawayPct: toNumber(row.putawayPct)
 		}));
-	}),
+	})
 };

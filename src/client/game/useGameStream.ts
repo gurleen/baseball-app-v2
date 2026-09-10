@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 
-import { client, isSocketConnected, onConnectionChange } from "../rpc/client.ts";
-import { GameStore, type GameStoreState } from "./store.ts";
+import { client, isSocketConnected, onConnectionChange } from '../rpc/client.ts';
+import { GameStore, type GameStoreState } from './store.ts';
 
 export interface UseGameStreamResult extends GameStoreState {
 	setDelayMs: (delayMs: number) => void;
@@ -31,7 +31,7 @@ export function useGameStream(gamePk: number): UseGameStreamResult {
 		let attempt = 0;
 
 		store.setConnected(isSocketConnected());
-		const stopWatchingSocket = onConnectionChange(connected => store.setConnected(connected));
+		const stopWatchingSocket = onConnectionChange((connected) => store.setConnected(connected));
 
 		/**
 		 * The socket reconnects underneath us, but the *subscription* does not —
@@ -52,7 +52,7 @@ export function useGameStream(gamePk: number): UseGameStreamResult {
 					}
 				} catch (error) {
 					if (cancelled || controller.signal.aborted) return;
-					store.setError(error instanceof Error ? error : new Error("Game stream failed"));
+					store.setError(error instanceof Error ? error : new Error('Game stream failed'));
 				}
 
 				if (cancelled || controller.signal.aborted) return;
@@ -61,7 +61,7 @@ export function useGameStream(gamePk: number): UseGameStreamResult {
 				// tab back in the same instant.
 				attempt += 1;
 				const delay = Math.min(500 * 2 ** (attempt - 1), 15_000) + Math.random() * 250;
-				await new Promise(resolve => setTimeout(resolve, delay));
+				await new Promise((resolve) => setTimeout(resolve, delay));
 			}
 		}
 
@@ -77,9 +77,9 @@ export function useGameStream(gamePk: number): UseGameStreamResult {
 
 	return {
 		...state,
-		setDelayMs: delayMs => storeRef.current.setDelayMs(delayMs),
-		setPaused: paused => storeRef.current.setPaused(paused),
-		calibrateFrom: pausedAt => storeRef.current.calibrateFrom(pausedAt),
-		reset: () => storeRef.current.reset(),
+		setDelayMs: (delayMs) => storeRef.current.setDelayMs(delayMs),
+		setPaused: (paused) => storeRef.current.setPaused(paused),
+		calibrateFrom: (pausedAt) => storeRef.current.calibrateFrom(pausedAt),
+		reset: () => storeRef.current.reset()
 	};
 }

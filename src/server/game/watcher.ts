@@ -1,17 +1,17 @@
-import { applyPatch, type Operation } from "fast-json-patch";
+import { applyPatch, type Operation } from 'fast-json-patch';
 
-import type { GameEvent } from "../../shared/events.ts";
-import type { GameSnapshot, PitchMixEntry } from "../../shared/models.ts";
-import { isAbortError } from "../mlb/errors.ts";
-import { getMlbGameFeed, getMlbGameFeedDiffPatch } from "../mlb/gumbo.ts";
-import { getPitcherPitchArsenal } from "../mlb/pitchMix.ts";
-import { getSavantGameFeed } from "../mlb/savant.ts";
-import type { GumboFeed } from "../mlb/schemas/gumbo.ts";
-import { indexSavantPitches, type SavantPitchRow } from "../mlb/schemas/savant.ts";
-import { diffSnapshots } from "../transform/diff.ts";
-import { toSeasonPitchMix } from "../transform/pitchMix.ts";
-import { toGameSnapshot } from "../transform/snapshot.ts";
-import { GameEventEmitter } from "./emitter.ts";
+import type { GameEvent } from '../../shared/events.ts';
+import type { GameSnapshot, PitchMixEntry } from '../../shared/models.ts';
+import { isAbortError } from '../mlb/errors.ts';
+import { getMlbGameFeed, getMlbGameFeedDiffPatch } from '../mlb/gumbo.ts';
+import { getPitcherPitchArsenal } from '../mlb/pitchMix.ts';
+import { getSavantGameFeed } from '../mlb/savant.ts';
+import type { GumboFeed } from '../mlb/schemas/gumbo.ts';
+import { indexSavantPitches, type SavantPitchRow } from '../mlb/schemas/savant.ts';
+import { diffSnapshots } from '../transform/diff.ts';
+import { toSeasonPitchMix } from '../transform/pitchMix.ts';
+import { toGameSnapshot } from '../transform/snapshot.ts';
+import { GameEventEmitter } from './emitter.ts';
 
 /**
  * Poll intervals by game status. These are per *game*, not per viewer — one
@@ -22,7 +22,7 @@ import { GameEventEmitter } from "./emitter.ts";
 const INTERVALS = {
 	live: { gumbo: 2_000, savant: 12_000 },
 	preview: { gumbo: 30_000, savant: 0 },
-	other: { gumbo: 15_000, savant: 30_000 },
+	other: { gumbo: 15_000, savant: 30_000 }
 } as const;
 
 const HEARTBEAT_MS = 20_000;
@@ -36,7 +36,7 @@ export interface WatcherDeps {
 	fetchPitcherSeasonMix: (
 		personId: number,
 		season: string,
-		options?: { signal?: AbortSignal },
+		options?: { signal?: AbortSignal }
 	) => Promise<PitchMixEntry[]>;
 	now: () => number;
 }
@@ -47,7 +47,7 @@ const defaultDeps: WatcherDeps = {
 	fetchSavant: getSavantGameFeed,
 	fetchPitcherSeasonMix: async (personId, season, options) =>
 		toSeasonPitchMix(await getPitcherPitchArsenal(personId, season, options)),
-	now: () => Date.now(),
+	now: () => Date.now()
 };
 
 export interface WatcherStats {
@@ -90,7 +90,7 @@ export class GameWatcher {
 		savantFetches: 0,
 		pitchMixFetches: 0,
 		errors: 0,
-		lastUpdatedAt: null,
+		lastUpdatedAt: null
 	};
 
 	constructor(gamePk: number, deps: Partial<WatcherDeps> = {}) {
@@ -99,7 +99,7 @@ export class GameWatcher {
 		this.#emitter = new GameEventEmitter({
 			// A subscriber that falls behind is resynced with current state
 			// rather than replayed through a long backlog of deltas.
-			onOverflow: () => (this.#snapshot ? { t: "snapshot", snapshot: this.#snapshot } : null),
+			onOverflow: () => (this.#snapshot ? { t: 'snapshot', snapshot: this.#snapshot } : null)
 		});
 	}
 
@@ -119,8 +119,12 @@ export class GameWatcher {
 	 * Subscribes to the stream. The first event is always a snapshot: either
 	 * the one already in memory, or the first one built after startup.
 	 */
-	subscribe(options: { signal?: AbortSignal; onClose?: () => void } = {}): AsyncGenerator<GameEvent> {
-		const initial: GameEvent[] = this.#snapshot ? [{ t: "snapshot", snapshot: this.#snapshot }] : [];
+	subscribe(
+		options: { signal?: AbortSignal; onClose?: () => void } = {}
+	): AsyncGenerator<GameEvent> {
+		const initial: GameEvent[] = this.#snapshot
+			? [{ t: 'snapshot', snapshot: this.#snapshot }]
+			: [];
 		return this.#emitter.subscribe(initial, options);
 	}
 
@@ -133,7 +137,7 @@ export class GameWatcher {
 		this.#scheduleSavant(0);
 
 		this.#heartbeatTimer = setInterval(() => {
-			this.#emitter.emit({ t: "heartbeat", at: this.#deps.now() });
+			this.#emitter.emit({ t: 'heartbeat', at: this.#deps.now() });
 		}, HEARTBEAT_MS);
 	}
 
@@ -157,9 +161,9 @@ export class GameWatcher {
 	// ---------- polling ----------
 
 	#intervals() {
-		const kind = this.#snapshot?.state.kind ?? "other";
-		if (kind === "live") return INTERVALS.live;
-		if (kind === "preview") return INTERVALS.preview;
+		const kind = this.#snapshot?.state.kind ?? 'other';
+		if (kind === 'live') return INTERVALS.live;
+		if (kind === 'preview') return INTERVALS.preview;
 		return INTERVALS.other;
 	}
 
@@ -194,7 +198,7 @@ export class GameWatcher {
 				const response = await this.#deps.fetchGumboDiff(this.gamePk, {
 					signal,
 					startTimecode: this.#feed.metaData.timeStamp,
-					pushUpdateId: this.#pushUpdateId,
+					pushUpdateId: this.#pushUpdateId
 				});
 				this.#pushUpdateId = crypto.randomUUID();
 
@@ -204,7 +208,7 @@ export class GameWatcher {
 							structuredClone(this.#feed),
 							entry.diff as readonly Operation[],
 							false,
-							true,
+							true
 						).newDocument as GumboFeed;
 					}
 				} else {
@@ -267,7 +271,7 @@ export class GameWatcher {
 
 		const next: GameSnapshot = {
 			...toGameSnapshot(this.#feed, this.#savantIndex, this.#deps.now()),
-			seasonPitchMixByPitcher: Object.fromEntries(this.#seasonMix),
+			seasonPitchMixByPitcher: Object.fromEntries(this.#seasonMix)
 		};
 		const events = diffSnapshots(this.#snapshot, next);
 
@@ -309,7 +313,7 @@ export class GameWatcher {
 
 		try {
 			const entries = await this.#deps.fetchPitcherSeasonMix(pitcherId, season, {
-				signal: this.#abort?.signal,
+				signal: this.#abort?.signal
 			});
 			if (!this.#running) return;
 			this.#seasonMix.set(pitcherId, entries);

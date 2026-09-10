@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties } from 'react';
 
 /**
  * Grid items default to `min-width: auto`, which means they refuse to shrink
@@ -7,15 +7,15 @@ import type { CSSProperties } from "react";
  * on the track and `minWidth: 0` on the item are the two halves of the fix.
  */
 export const fullWidthColumn: CSSProperties = {
-	display: "grid",
-	gridTemplateColumns: "minmax(0, 1fr)",
+	display: 'grid',
+	gridTemplateColumns: 'minmax(0, 1fr)'
 };
 
 /** Responsive columns that collapse to one before overflowing. */
 export function responsiveColumns(minPx: number): CSSProperties {
 	return {
-		display: "grid",
-		gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${minPx}px), 1fr))`,
+		display: 'grid',
+		gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${minPx}px), 1fr))`
 	};
 }
 
@@ -28,4 +28,4 @@ export const shrinkable: CSSProperties = { minWidth: 0 };
  * axis compute to `auto`, which lets a 1px-taller child become a vertical
  * drag surface on mobile.
  */
-export const scrollX: CSSProperties = { overflowX: "auto", overflowY: "hidden", minWidth: 0 };
+export const scrollX: CSSProperties = { overflowX: 'auto', overflowY: 'hidden', minWidth: 0 };

@@ -1,14 +1,14 @@
-import type { Boxscore, GumboFeed } from "../mlb/schemas/gumbo.ts";
-import type { Handedness, PlayerProfile } from "../../shared/models.ts";
+import type { Boxscore, GumboFeed } from '../mlb/schemas/gumbo.ts';
+import type { Handedness, PlayerProfile } from '../../shared/models.ts';
 
 /** GUMBO keys player maps as "ID683002"; the client gets plain numbers. */
 export function parsePlayerKey(key: string): number | null {
-	const id = Number.parseInt(key.replace(/^ID/, ""), 10);
+	const id = Number.parseInt(key.replace(/^ID/, ''), 10);
 	return Number.isFinite(id) ? id : null;
 }
 
 function toHandedness(code: string | undefined): Handedness | null {
-	return code === "L" || code === "R" || code === "S" ? code : null;
+	return code === 'L' || code === 'R' || code === 'S' ? code : null;
 }
 
 /**
@@ -35,7 +35,7 @@ export function toPlayers(feed: GumboFeed): Record<number, PlayerProfile> {
 			jerseyNumber: boxscore?.jerseyNumber || person.primaryNumber || null,
 			position: boxscore?.position?.abbreviation ?? person.primaryPosition.abbreviation ?? null,
 			batSide: toHandedness(person.batSide.code),
-			pitchHand: toHandedness(person.pitchHand.code),
+			pitchHand: toHandedness(person.pitchHand.code)
 		};
 	}
 
@@ -43,7 +43,7 @@ export function toPlayers(feed: GumboFeed): Record<number, PlayerProfile> {
 }
 
 function collectBoxscorePlayers(boxscore: Boxscore) {
-	const byId = new Map<number, Boxscore["teams"]["home"]["players"][string]>();
+	const byId = new Map<number, Boxscore['teams']['home']['players'][string]>();
 
 	for (const side of [boxscore.teams.home, boxscore.teams.away]) {
 		for (const [key, entry] of Object.entries(side.players)) {

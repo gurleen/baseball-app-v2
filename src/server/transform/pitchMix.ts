@@ -1,5 +1,5 @@
-import type { PitchArsenalResponse } from "../mlb/schemas/pitchArsenal.ts";
-import type { LivePlay, PitchMixEntry, PlaySummary } from "../../shared/models.ts";
+import type { PitchArsenalResponse } from '../mlb/schemas/pitchArsenal.ts';
+import type { LivePlay, PitchMixEntry, PlaySummary } from '../../shared/models.ts';
 
 /**
  * In-game pitch-type usage per pitcher. Walks completed at-bats plus the live
@@ -7,9 +7,12 @@ import type { LivePlay, PitchMixEntry, PlaySummary } from "../../shared/models.t
  */
 export function toPitchMixByPitcher(
 	plays: PlaySummary[],
-	currentPlay: LivePlay | null,
+	currentPlay: LivePlay | null
 ): Record<number, PitchMixEntry[]> {
-	const byPitcher = new Map<number, Map<string, { label: string; count: number; speedSum: number; speedCount: number }>>();
+	const byPitcher = new Map<
+		number,
+		Map<string, { label: string; count: number; speedSum: number; speedCount: number }>
+	>();
 
 	for (const play of plays) {
 		addPitches(byPitcher, play.pitcherId, play.pitches);
@@ -36,20 +39,23 @@ export function toSeasonPitchMix(payload: PitchArsenalResponse): PitchMixEntry[]
 	if (splits.length === 0) return [];
 
 	return splits
-		.map(split => ({
+		.map((split) => ({
 			code: split.stat.type.code,
 			label: split.stat.type.description,
 			count: split.stat.count,
 			percent: Math.round(split.stat.percentage * 100),
-			averageSpeed: split.stat.averageSpeed ?? null,
+			averageSpeed: split.stat.averageSpeed ?? null
 		}))
 		.sort((left, right) => right.count - left.count);
 }
 
 function addPitches(
-	byPitcher: Map<number, Map<string, { label: string; count: number; speedSum: number; speedCount: number }>>,
+	byPitcher: Map<
+		number,
+		Map<string, { label: string; count: number; speedSum: number; speedCount: number }>
+	>,
 	pitcherId: number,
-	pitches: PlaySummary["pitches"],
+	pitches: PlaySummary['pitches']
 ) {
 	let buckets = byPitcher.get(pitcherId);
 	if (!buckets) {
@@ -72,14 +78,14 @@ function addPitches(
 				label: pitch.type.name,
 				count: 1,
 				speedSum: speed ?? 0,
-				speedCount: speed != null ? 1 : 0,
+				speedCount: speed != null ? 1 : 0
 			});
 		}
 	}
 }
 
 function toEntries(
-	buckets: Map<string, { label: string; count: number; speedSum: number; speedCount: number }>,
+	buckets: Map<string, { label: string; count: number; speedSum: number; speedCount: number }>
 ): PitchMixEntry[] {
 	const total = [...buckets.values()].reduce((sum, bucket) => sum + bucket.count, 0);
 	if (total === 0) return [];
@@ -90,7 +96,7 @@ function toEntries(
 			label,
 			count,
 			percent: Math.round((count / total) * 100),
-			averageSpeed: speedCount > 0 ? speedSum / speedCount : null,
+			averageSpeed: speedCount > 0 ? speedSum / speedCount : null
 		}))
 		.sort((left, right) => right.count - left.count);
 }

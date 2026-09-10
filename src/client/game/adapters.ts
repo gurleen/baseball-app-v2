@@ -9,8 +9,8 @@ import type {
 	PlayAction,
 	PlaySummary,
 	TeamBox,
-	TeamRef,
-} from "../../shared/models.ts";
+	TeamRef
+} from '../../shared/models.ts';
 
 // ============================================================
 // Projections from our domain models onto @hydra-tv/sports props.
@@ -20,7 +20,7 @@ import type {
 // error, which is easy to miss.
 // ============================================================
 
-export type SportsPitchResult = "ball" | "called" | "swinging" | "foul" | "inplay" | "hbp";
+export type SportsPitchResult = 'ball' | 'called' | 'swinging' | 'foul' | 'inplay' | 'hbp';
 
 export interface StrikeZonePitch {
 	x: number;
@@ -36,7 +36,7 @@ export interface SequencePitch {
 	velocity?: number;
 	spin?: number;
 	result?: string;
-	kind?: "ball" | "strike" | "foul" | "inplay";
+	kind?: 'ball' | 'strike' | 'foul' | 'inplay';
 	count?: string;
 	x?: number;
 	z?: number;
@@ -48,30 +48,33 @@ export interface SequencePitch {
  */
 export function toSportsResult(pitch: Pitch): SportsPitchResult {
 	switch (pitch.call.kind) {
-		case "ball":
-			return "ball";
-		case "foul":
-			return "foul";
-		case "inplay":
-			return "inplay";
-		case "hbp":
-			return "hbp";
-		case "strike":
-			return pitch.call.isSwing ? "swinging" : "called";
+		case 'ball':
+			return 'ball';
+		case 'foul':
+			return 'foul';
+		case 'inplay':
+			return 'inplay';
+		case 'hbp':
+			return 'hbp';
+		case 'strike':
+			return pitch.call.isSwing ? 'swinging' : 'called';
 	}
 }
 
 /** Pitches with a tracked location, ready for StrikeZonePlot. */
 export function toStrikeZonePitches(pitches: Pitch[]): StrikeZonePitch[] {
 	return pitches
-		.filter((pitch): pitch is Pitch & { location: NonNullable<Pitch["location"]> } => pitch.location !== null)
-		.map(pitch => ({
+		.filter(
+			(pitch): pitch is Pitch & { location: NonNullable<Pitch['location']> } =>
+				pitch.location !== null
+		)
+		.map((pitch) => ({
 			x: pitch.location.x,
 			z: pitch.location.z,
 			type: pitch.type?.code,
 			result: toSportsResult(pitch),
 			number: pitch.pitchNumber,
-			label: pitchTooltip(pitch),
+			label: pitchTooltip(pitch)
 		}));
 }
 
@@ -84,23 +87,23 @@ function pitchTooltip(pitch: Pitch): string {
 	const exitVelocity = pitch.metrics?.battedBall?.exitVelocity;
 	if (exitVelocity !== null && exitVelocity !== undefined) parts.push(`${exitVelocity} mph EV`);
 
-	return parts.join(" · ");
+	return parts.join(' · ');
 }
 
 export function toSequencePitches(pitches: Pitch[]): SequencePitch[] {
-	return pitches.map(pitch => ({
+	return pitches.map((pitch) => ({
 		type: pitch.type?.code,
 		velocity: pitch.velocity?.start,
 		spin: pitch.spinRate ?? undefined,
 		result: (pitch.call.name || pitch.description).toUpperCase(),
-		kind: pitch.call.kind === "hbp" ? "ball" : pitch.call.kind,
+		kind: pitch.call.kind === 'hbp' ? 'ball' : pitch.call.kind,
 		count: `${pitch.countBefore.balls}-${pitch.countBefore.strikes}`,
 		x: pitch.location?.x,
-		z: pitch.location?.z,
+		z: pitch.location?.z
 	}));
 }
 
-const PITCH_MIX_COLORS = ["var(--ch-1)", "var(--ch-2)", "var(--ch-3)", "var(--ch-4)"] as const;
+const PITCH_MIX_COLORS = ['var(--ch-1)', 'var(--ch-2)', 'var(--ch-3)', 'var(--ch-4)'] as const;
 
 export interface PitchMixBar {
 	/** Short pitch-type code — fits the BarChart label gutter. */
@@ -118,7 +121,7 @@ export function toPitchMixBars(entries: PitchMixEntry[]): PitchMixBar[] {
 		value: entry.percent,
 		count: entry.count,
 		color: PITCH_MIX_COLORS[index % PITCH_MIX_COLORS.length]!,
-		averageSpeed: entry.averageSpeed,
+		averageSpeed: entry.averageSpeed
 	}));
 }
 
@@ -129,7 +132,7 @@ export function formatPitchMixBarValue(bar: PitchMixBar): string {
 
 /** Formats mean velo as "96.2", or empty when the type has no tracked speed. */
 export function formatPitchMixBarSpeed(bar: PitchMixBar): string {
-	if (bar.averageSpeed == null) return "";
+	if (bar.averageSpeed == null) return '';
 	return bar.averageSpeed.toFixed(1);
 }
 
@@ -138,13 +141,16 @@ export function formatPitchMixBarSpeed(bar: PitchMixBar): string {
  * describes the batter currently up; the defaults are only a league average.
  */
 export function zoneBounds(pitches: Pitch[]): { zoneTop?: number; zoneBottom?: number } {
-	const withZone = pitches.filter(pitch => pitch.strikeZone !== null).at(-1);
+	const withZone = pitches.filter((pitch) => pitch.strikeZone !== null).at(-1);
 	if (!withZone?.strikeZone) return {};
 	return { zoneTop: withZone.strikeZone.top, zoneBottom: withZone.strikeZone.bottom };
 }
 
 /** `TOP 3.42 · BOT 1.59 FT` — omitted until a pitch has carried the batter's zone. */
-export function formatZoneBounds(bounds: { zoneTop?: number; zoneBottom?: number }): string | undefined {
+export function formatZoneBounds(bounds: {
+	zoneTop?: number;
+	zoneBottom?: number;
+}): string | undefined {
 	if (bounds.zoneTop === undefined || bounds.zoneBottom === undefined) return undefined;
 	return `TOP ${bounds.zoneTop.toFixed(2)} · BOT ${bounds.zoneBottom.toFixed(2)} FT`;
 }
@@ -154,16 +160,17 @@ export function formatZoneBounds(bounds: { zoneTop?: number; zoneBottom?: number
 export interface PlayByPlayRow {
 	clock?: string;
 	period?: string;
-	team?: "home" | "away";
+	team?: 'home' | 'away';
 	text?: string;
 	score?: string;
-	kind?: "normal" | "score" | "period";
+	kind?: 'normal' | 'score' | 'period';
 }
 
-export type PlayLogEntry = { kind: "play"; play: PlaySummary } | { kind: "action"; action: PlayAction };
+export type PlayLogEntry =
+	{ kind: 'play'; play: PlaySummary } | { kind: 'action'; action: PlayAction };
 
 function logHalf(entry: PlayLogEntry): { inning: number; halfInning: HalfInning } {
-	return entry.kind === "play"
+	return entry.kind === 'play'
 		? { inning: entry.play.inning, halfInning: entry.play.halfInning }
 		: { inning: entry.action.inning, halfInning: entry.action.halfInning };
 }
@@ -177,11 +184,11 @@ export function toPlayLog(snapshot: GameSnapshot): PlayLogEntry[] {
 	const entries: PlayLogEntry[] = [];
 
 	for (const play of snapshot.plays) {
-		for (const action of play.actions) entries.push({ kind: "action", action });
-		entries.push({ kind: "play", play });
+		for (const action of play.actions) entries.push({ kind: 'action', action });
+		entries.push({ kind: 'play', play });
 	}
 	for (const action of snapshot.currentPlay?.actions ?? []) {
-		entries.push({ kind: "action", action });
+		entries.push({ kind: 'action', action });
 	}
 
 	return entries;
@@ -193,34 +200,34 @@ export function toPlayLog(snapshot: GameSnapshot): PlayLogEntry[] {
  */
 export function toPlayByPlayRows(snapshot: GameSnapshot): PlayByPlayRow[] {
 	const rows: PlayByPlayRow[] = [];
-	let lastHalf = "";
+	let lastHalf = '';
 
 	for (const entry of toPlayLog(snapshot)) {
 		const { inning, halfInning } = logHalf(entry);
 		const half = `${halfInning}-${inning}`;
 		if (half !== lastHalf) {
-			rows.push({ kind: "period", period: `${halfInning === "top" ? "TOP" : "BOT"} ${inning}` });
+			rows.push({ kind: 'period', period: `${halfInning === 'top' ? 'TOP' : 'BOT'} ${inning}` });
 			lastHalf = half;
 		}
 
-		if (entry.kind === "play") {
+		if (entry.kind === 'play') {
 			const play = entry.play;
 			rows.push({
 				// The batting side owns the play, so the color bar follows it.
-				team: play.halfInning === "top" ? "away" : "home",
+				team: play.halfInning === 'top' ? 'away' : 'home',
 				clock: play.scorecard ?? undefined,
 				text: play.description,
 				score: play.isScoringPlay ? `${play.scoreAfter.away}-${play.scoreAfter.home}` : undefined,
-				kind: play.isScoringPlay ? "score" : "normal",
+				kind: play.isScoringPlay ? 'score' : 'normal'
 			});
 			continue;
 		}
 
 		const action = entry.action;
 		rows.push({
-			team: action.halfInning === "top" ? "away" : "home",
+			team: action.halfInning === 'top' ? 'away' : 'home',
 			text: action.description,
-			kind: action.isScoringPlay ? "score" : "normal",
+			kind: action.isScoringPlay ? 'score' : 'normal'
 		});
 	}
 
@@ -232,15 +239,15 @@ export function toPlayByPlayRows(snapshot: GameSnapshot): PlayByPlayRow[] {
 export interface SprayBall {
 	x?: number;
 	y?: number;
-	result?: "single" | "double" | "triple" | "homer" | "out";
+	result?: 'single' | 'double' | 'triple' | 'homer' | 'out';
 	label?: string;
 }
 
-const HIT_RESULTS: Record<string, SprayBall["result"]> = {
-	single: "single",
-	double: "double",
-	triple: "triple",
-	home_run: "homer",
+const HIT_RESULTS: Record<string, SprayBall['result']> = {
+	single: 'single',
+	double: 'double',
+	triple: 'triple',
+	home_run: 'homer'
 };
 
 /**
@@ -248,11 +255,11 @@ const HIT_RESULTS: Record<string, SprayBall["result"]> = {
  * Coordinates come from Savant in feet from home plate, which is the space the
  * component already takes — no conversion.
  */
-export function toSprayBalls(plays: PlaySummary[], teamFilter?: "home" | "away"): SprayBall[] {
+export function toSprayBalls(plays: PlaySummary[], teamFilter?: 'home' | 'away'): SprayBall[] {
 	const balls: SprayBall[] = [];
 
 	for (const play of plays) {
-		if (teamFilter && (play.halfInning === "top" ? "away" : "home") !== teamFilter) continue;
+		if (teamFilter && (play.halfInning === 'top' ? 'away' : 'home') !== teamFilter) continue;
 
 		for (const pitch of play.pitches) {
 			const coords = pitch.metrics?.battedBall?.hitCoords;
@@ -262,8 +269,8 @@ export function toSprayBalls(plays: PlaySummary[], teamFilter?: "home" | "away")
 			balls.push({
 				x: coords.x,
 				y: coords.y,
-				result: HIT_RESULTS[play.eventType ?? ""] ?? "out",
-				label: exitVelocity ? `${play.description} (${exitVelocity} mph)` : play.description,
+				result: HIT_RESULTS[play.eventType ?? ''] ?? 'out',
+				label: exitVelocity ? `${play.description} (${exitVelocity} mph)` : play.description
 			});
 		}
 	}
@@ -273,21 +280,21 @@ export function toSprayBalls(plays: PlaySummary[], teamFilter?: "home" | "away")
 
 // ---------- misc ----------
 
-export function teamSideOf(snapshot: GameSnapshot, side: "home" | "away"): TeamRef {
+export function teamSideOf(snapshot: GameSnapshot, side: 'home' | 'away'): TeamRef {
 	return snapshot.teams[side];
 }
 
 /** "TOP 7" / "MID 7" — the label above the score. */
 export function periodLabel(snapshot: GameSnapshot): string {
 	const { state } = snapshot;
-	if (state.kind === "final") return "";
+	if (state.kind === 'final') return '';
 	if (!state.inning) return state.detail.toUpperCase();
 
-	if (state.inningState === "Middle" || state.inningState === "End") {
+	if (state.inningState === 'Middle' || state.inningState === 'End') {
 		return `${state.inningState.toUpperCase()} ${state.inning}`;
 	}
 
-	return `${state.halfInning === "top" ? "TOP" : "BOT"} ${state.inning}`;
+	return `${state.halfInning === 'top' ? 'TOP' : 'BOT'} ${state.inning}`;
 }
 
 /** The at-bat in progress, or the last completed one between innings / after the final out. */
@@ -300,70 +307,83 @@ export function canShowAtBat(snapshot: GameSnapshot): boolean {
 	return play !== null && snapshot.players[play.batterId] !== undefined;
 }
 
-export function offenseSide(snapshot: GameSnapshot): "home" | "away" | null {
+export function offenseSide(snapshot: GameSnapshot): 'home' | 'away' | null {
 	const half = snapshot.currentPlay?.halfInning ?? snapshot.state.halfInning;
 	if (!half) return null;
-	return half === "top" ? "away" : "home";
+	return half === 'top' ? 'away' : 'home';
 }
 
 export function findBattingLine(snapshot: GameSnapshot, playerId: number): BattingLine | undefined {
-	for (const side of ["away", "home"] as const) {
-		const box = snapshot.boxscore[side];
-		const found = box.batting.find(line => line.playerId === playerId) ?? box.bench.find(line => line.playerId === playerId);
-		if (found) return found;
-	}
-	return undefined;
-}
-
-export function findPitchingLine(snapshot: GameSnapshot, playerId: number): PitchingLine | undefined {
-	for (const side of ["away", "home"] as const) {
+	for (const side of ['away', 'home'] as const) {
 		const box = snapshot.boxscore[side];
 		const found =
-			box.pitching.find(line => line.playerId === playerId) ?? box.bullpen.find(line => line.playerId === playerId);
+			box.batting.find((line) => line.playerId === playerId) ??
+			box.bench.find((line) => line.playerId === playerId);
 		if (found) return found;
 	}
 	return undefined;
 }
 
-export function probablePitcherLine(snapshot: GameSnapshot, side: "home" | "away"): PitchingLine | undefined {
+export function findPitchingLine(
+	snapshot: GameSnapshot,
+	playerId: number
+): PitchingLine | undefined {
+	for (const side of ['away', 'home'] as const) {
+		const box = snapshot.boxscore[side];
+		const found =
+			box.pitching.find((line) => line.playerId === playerId) ??
+			box.bullpen.find((line) => line.playerId === playerId);
+		if (found) return found;
+	}
+	return undefined;
+}
+
+export function probablePitcherLine(
+	snapshot: GameSnapshot,
+	side: 'home' | 'away'
+): PitchingLine | undefined {
 	const id = snapshot.probablePitchers[side];
 	if (id !== null) return findPitchingLine(snapshot, id) ?? snapshot.boxscore[side].pitching[0];
 	return snapshot.boxscore[side].pitching[0];
 }
 
 function linesById(box: TeamBox): Map<number, BattingLine> {
-	return new Map([...box.batting, ...box.bench].map(line => [line.playerId, line]));
+	return new Map([...box.batting, ...box.bench].map((line) => [line.playerId, line]));
 }
 
 /** Current 1–9, batting-spot order. `line` is missing only if the player is not yet in the box. */
-export function currentLineup(box: TeamBox): { slot: number; playerId: number; line: BattingLine | undefined }[] {
+export function currentLineup(
+	box: TeamBox
+): { slot: number; playerId: number; line: BattingLine | undefined }[] {
 	const byId = linesById(box);
 	if (box.battingOrder.length > 0) {
 		return box.battingOrder.map((playerId, index) => ({
 			slot: index + 1,
 			playerId,
-			line: byId.get(playerId),
+			line: byId.get(playerId)
 		}));
 	}
 
 	return box.batting
-		.filter(line => line.battingOrder !== null)
+		.filter((line) => line.battingOrder !== null)
 		.sort((left, right) => (left.battingOrder ?? 0) - (right.battingOrder ?? 0))
-		.map(line => ({ slot: line.battingOrder ?? 0, playerId: line.playerId, line }));
+		.map((line) => ({ slot: line.battingOrder ?? 0, playerId: line.playerId, line }));
 }
 
 /** Opening-day 1–9; falls back to the current order if starters are not marked. */
-export function startingLineup(box: TeamBox): { slot: number; playerId: number; line: BattingLine | undefined }[] {
+export function startingLineup(
+	box: TeamBox
+): { slot: number; playerId: number; line: BattingLine | undefined }[] {
 	const starters = box.batting
-		.filter(line => line.starter && line.battingOrder !== null)
+		.filter((line) => line.starter && line.battingOrder !== null)
 		.sort((left, right) => (left.battingOrder ?? 0) - (right.battingOrder ?? 0))
-		.map(line => ({ slot: line.battingOrder ?? 0, playerId: line.playerId, line }));
+		.map((line) => ({ slot: line.battingOrder ?? 0, playerId: line.playerId, line }));
 
 	return starters.length > 0 ? starters : currentLineup(box);
 }
 
 export function batterSlash(line: BattingLine): string {
-	if (line.avg === "-" && line.obp === "-" && line.slg === "-") return "";
+	if (line.avg === '-' && line.obp === '-' && line.slg === '-') return '';
 	return `${line.avg}/${line.obp}/${line.slg}`;
 }
 
@@ -423,7 +443,7 @@ export function absChallengeRows(snapshot: GameSnapshot): AbsChallengeRow[] {
 				challengerId: pitch.absReview.challengerId,
 				challengerType: abs?.challengerType ?? null,
 				isBatter: abs?.isBatter ?? null,
-				batterHand: snapshot.players[play.batterId]?.batSide ?? null,
+				batterHand: snapshot.players[play.batterId]?.batSide ?? null
 			});
 		}
 	}
@@ -432,24 +452,29 @@ export function absChallengeRows(snapshot: GameSnapshot): AbsChallengeRow[] {
 
 /** Mean batter zone across challenges — a composite plot cannot use one stance. */
 export function meanZoneBounds(rows: AbsChallengeRow[]): { zoneTop?: number; zoneBottom?: number } {
-	const zones = rows.map(row => row.strikeZone).filter((zone): zone is NonNullable<typeof zone> => zone !== null);
+	const zones = rows
+		.map((row) => row.strikeZone)
+		.filter((zone): zone is NonNullable<typeof zone> => zone !== null);
 	if (zones.length === 0) return {};
 	return {
 		zoneTop: zones.reduce((sum, zone) => sum + zone.top, 0) / zones.length,
-		zoneBottom: zones.reduce((sum, zone) => sum + zone.bottom, 0) / zones.length,
+		zoneBottom: zones.reduce((sum, zone) => sum + zone.bottom, 0) / zones.length
 	};
 }
 
 export function toAbsZonePitches(rows: AbsChallengeRow[]): StrikeZonePitch[] {
 	return rows
-		.filter((row): row is AbsChallengeRow & { location: NonNullable<AbsChallengeRow["location"]> } => row.location !== null)
-		.map(row => ({
+		.filter(
+			(row): row is AbsChallengeRow & { location: NonNullable<AbsChallengeRow['location']> } =>
+				row.location !== null
+		)
+		.map((row) => ({
 			x: row.location.x,
 			z: row.location.z,
 			type: row.type ?? undefined,
 			result: row.result,
 			number: row.index,
-			label: absChallengeTooltip(row),
+			label: absChallengeTooltip(row)
 		}));
 }
 
@@ -459,14 +484,14 @@ function absChallengeTooltip(row: AbsChallengeRow): string {
 	parts.push(umpCallLabel(row.callCode, row.callName));
 	const miss = formatMissBy(row.edgeDistance);
 	if (miss) parts.push(miss);
-	if (row.inProgress) parts.push("Pending");
-	else parts.push(row.isOverturned ? "Overturned" : "Confirmed");
-	return parts.join(" · ");
+	if (row.inProgress) parts.push('Pending');
+	else parts.push(row.isOverturned ? 'Overturned' : 'Confirmed');
+	return parts.join(' · ');
 }
 
 export function umpCallLabel(code: string, name: string): string {
-	if (code === "C") return "Called Strike";
-	if (code === "B" || code === "*B") return "Called Ball";
+	if (code === 'C') return 'Called Strike';
+	if (code === 'B' || code === '*B') return 'Called Ball';
 	return name || code;
 }
 
@@ -474,8 +499,8 @@ export function umpCallLabel(code: string, name: string): string {
 export function absCallLabel(code: string, name: string, isOverturned: boolean): string {
 	const ump = umpCallLabel(code, name);
 	if (!isOverturned) return ump;
-	if (ump === "Called Strike") return "Called Ball";
-	if (ump === "Called Ball") return "Called Strike";
+	if (ump === 'Called Strike') return 'Called Ball';
+	if (ump === 'Called Ball') return 'Called Strike';
 	return ump;
 }
 
@@ -485,7 +510,7 @@ export function formatMissBy(feet: number | null | undefined): string | undefine
 	return `${(feet * 12).toFixed(2)}"`;
 }
 
-export type MissDirection = "high" | "low" | "inside" | "outside";
+export type MissDirection = 'high' | 'low' | 'inside' | 'outside';
 
 /** Home-plate half-width in feet (17" / 2). Direction only — not the official miss. */
 const PLATE_HALF_WIDTH_FT = 8.5 / 12;
@@ -497,7 +522,7 @@ const PLATE_HALF_WIDTH_FT = 8.5 / 12;
 export function missDirection(
 	location: { x: number; z: number } | null,
 	strikeZone: { top: number; bottom: number } | null,
-	batSide: Handedness | null,
+	batSide: Handedness | null
 ): MissDirection | null {
 	if (!location || !strikeZone) return null;
 
@@ -514,23 +539,23 @@ export function missDirection(
 		const toFirst = PLATE_HALF_WIDTH_FT - x;
 		const toThird = x - -PLATE_HALF_WIDTH_FT;
 		const nearest = Math.min(toTop, toBot, toFirst, toThird);
-		if (nearest === toTop) return "high";
-		if (nearest === toBot) return "low";
+		if (nearest === toTop) return 'high';
+		if (nearest === toBot) return 'low';
 		if (nearest === toFirst) return horizontalMiss(1, batSide);
 		return horizontalMiss(-1, batSide);
 	}
 
 	const overflow = Math.max(overHigh, overLow, overFirst, overThird);
-	if (overflow === overHigh) return "high";
-	if (overflow === overLow) return "low";
+	if (overflow === overHigh) return 'high';
+	if (overflow === overLow) return 'low';
 	if (overflow === overFirst) return horizontalMiss(1, batSide);
 	return horizontalMiss(-1, batSide);
 }
 
 function horizontalMiss(xSign: 1 | -1, batSide: Handedness | null): MissDirection {
-	const rightHanded = batSide !== "L";
-	if (xSign > 0) return rightHanded ? "outside" : "inside";
-	return rightHanded ? "inside" : "outside";
+	const rightHanded = batSide !== 'L';
+	if (xSign > 0) return rightHanded ? 'outside' : 'inside';
+	return rightHanded ? 'inside' : 'outside';
 }
 
 export function formatMissDirection(direction: MissDirection | null): string | undefined {
