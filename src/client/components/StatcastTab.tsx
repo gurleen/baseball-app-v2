@@ -5,7 +5,7 @@ import type { GameSnapshot } from '../../shared/models.ts';
 import type { PitchArsenalRow } from '../../server/procedures/pitching.ts';
 import { probablePitcherLine } from '../game/adapters.ts';
 import { heatStyle, heatTitle } from '../lib/heat.ts';
-import { scrollX, shrinkable } from '../lib/layout.ts';
+import { responsiveColumns, scrollX, shrinkable } from '../lib/layout.ts';
 import { muted, numeric, table, td, th } from '../lib/table.ts';
 import { orpc } from '../rpc/client.ts';
 import { TeamLogo } from './TeamLogo.tsx';
@@ -80,7 +80,7 @@ const METRICS: ArsenalMetric[] = [
 
 export function StatcastTab({ snapshot }: { snapshot: GameSnapshot }) {
 	return (
-		<div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 'var(--sp-3)' }}>
+		<div style={{ ...responsiveColumns(420), gap: 'var(--sp-3)' }}>
 			<StatcastTeam snapshot={snapshot} side="away" />
 			<StatcastTeam snapshot={snapshot} side="home" />
 		</div>
