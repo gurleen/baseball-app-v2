@@ -1,9 +1,10 @@
-import { Panel } from '@hydra-tv/ui';
+import { useState } from 'react';
+import { Panel, Select } from '@hydra-tv/ui';
 import { useQuery } from '@tanstack/react-query';
 
 import type { GameSnapshot } from '../../shared/models.ts';
 import type { PitchArsenalRow } from '../../server/procedures/pitching.ts';
-import { probablePitcherLine } from '../game/adapters.ts';
+import { gamePitchers } from '../game/adapters.ts';
 import { heatStyle, heatTitle } from '../lib/heat.ts';
 import { responsiveColumns, scrollX, shrinkable } from '../lib/layout.ts';
 import { muted, numeric, table, td, th } from '../lib/table.ts';
@@ -89,15 +90,22 @@ export function StatcastTab({ snapshot }: { snapshot: GameSnapshot }) {
 
 function StatcastTeam({ snapshot, side }: { snapshot: GameSnapshot; side: 'home' | 'away' }) {
 	const team = snapshot.teams[side];
-	const starter = probablePitcherLine(snapshot, side);
-	const starterId = snapshot.probablePitchers[side] ?? starter?.playerId ?? null;
-	const player = starterId != null ? snapshot.players[starterId] : undefined;
+	const pitchers = gamePitchers(snapshot, side);
+
+	// Defaults to the starter (first option) and follows a late announcement
+	// until the viewer picks someone; the selection sticks from then on.
+	const [selectedId, setSelectedId] = useState<number | null>(null);
+	const activeId =
+		selectedId !== null && pitchers.some((pitcher) => pitcher.id === selectedId)
+			? selectedId
+			: (pitchers[0]?.id ?? null);
+	const player = activeId != null ? snapshot.players[activeId] : undefined;
 	const season = new Date(snapshot.datetime.startsAt).getFullYear();
 
 	const arsenalQuery = useQuery(
 		orpc.pitching.arsenal.queryOptions({
-			input: { pitcherPk: starterId ?? 0, season },
-			enabled: starterId != null
+			input: { pitcherPk: activeId ?? 0, season },
+			enabled: activeId != null
 		})
 	);
 
@@ -108,58 +116,79 @@ function StatcastTeam({ snapshot, side }: { snapshot: GameSnapshot; side: 'home'
 			meta={player ? player.fullName.toUpperCase() : 'STARTING PITCHER'}
 			actions={<TeamLogo teamId={team.id} width={28} />}
 		>
-			{starterId == null ? (
+			{pitchers.length === 0 ? (
 				<div style={muted}>Starting pitcher has not been announced yet.</div>
-			) : arsenalQuery.isLoading ? (
-				<div style={muted}>Loading pitch arsenal…</div>
-			) : (arsenalQuery.data?.length ?? 0) === 0 ? (
-				<div style={muted}>No Statcast data available.</div>
 			) : (
-				<div style={scrollX}>
-					<table style={{ ...table, minWidth: 700 }}>
-						<thead>
-							<tr>
-								<th style={th}>Pitch</th>
-								<th style={{ ...th, ...numeric }}>Usage</th>
-								{METRICS.map((metric) => (
-									<th
-										key={metric.key}
-										style={{ ...th, ...numeric }}
-										title={`${metric.label}: tinted vs the ${season} league average for that pitch type`}
-									>
-										{metric.label}
-									</th>
-								))}
-								<th style={{ ...th, ...numeric }}>Whiff%</th>
-								<th style={{ ...th, ...numeric }}>Chase%</th>
-								<th style={{ ...th, ...numeric }}>PutAway%</th>
-							</tr>
-						</thead>
-						<tbody>
-							{arsenalQuery.data!.map((row) => (
-								<tr key={row.pitchType ?? row.pitchName}>
-									<td style={td}>{row.pitchName ?? row.pitchType ?? '—'}</td>
-									<td style={{ ...td, ...numeric }}>{formatPct(row.usagePct)}</td>
-									{METRICS.map((metric) => {
-										const value = metric.value(row);
-										const baseline = metric.baseline(row);
-										return (
-											<td
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'column',
+						gap: 'var(--sp-3)'
+					}}
+				>
+					{pitchers.length > 1 ? (
+						<Select
+							label="PITCHER"
+							value={String(activeId)}
+							options={pitchers.map((pitcher) => ({
+								value: String(pitcher.id),
+								label: pitcher.starter ? `${pitcher.name} · SP` : pitcher.name
+							}))}
+							onChange={(value) => setSelectedId(Number(value))}
+						/>
+					) : null}
+					{arsenalQuery.isLoading ? (
+						<div style={muted}>Loading pitch arsenal…</div>
+					) : (arsenalQuery.data?.length ?? 0) === 0 ? (
+						<div style={muted}>No Statcast data available.</div>
+					) : (
+						<div style={scrollX}>
+							<table style={{ ...table, minWidth: 700 }}>
+								<thead>
+									<tr>
+										<th style={th}>Pitch</th>
+										<th style={{ ...th, ...numeric }}>Usage</th>
+										{METRICS.map((metric) => (
+											<th
 												key={metric.key}
-												style={{ ...td, ...numeric, ...heatStyle(value, baseline, metric.span) }}
-												title={heatTitle(metric.label, value, baseline, metric.unit, metric.digits)}
+												style={{ ...th, ...numeric }}
+												title={`${metric.label}: tinted vs the ${season} league average for that pitch type`}
 											>
-												{formatNumber(value, metric.digits)}
-											</td>
-										);
-									})}
-									<td style={{ ...td, ...numeric }}>{formatPct(row.whiffPct)}</td>
-									<td style={{ ...td, ...numeric }}>{formatPct(row.chasePct)}</td>
-									<td style={{ ...td, ...numeric }}>{formatPct(row.putawayPct)}</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+												{metric.label}
+											</th>
+										))}
+										<th style={{ ...th, ...numeric }}>Whiff%</th>
+										<th style={{ ...th, ...numeric }}>Chase%</th>
+										<th style={{ ...th, ...numeric }}>PutAway%</th>
+									</tr>
+								</thead>
+								<tbody>
+									{arsenalQuery.data!.map((row) => (
+										<tr key={row.pitchType ?? row.pitchName}>
+											<td style={td}>{row.pitchName ?? row.pitchType ?? '—'}</td>
+											<td style={{ ...td, ...numeric }}>{formatPct(row.usagePct)}</td>
+											{METRICS.map((metric) => {
+												const value = metric.value(row);
+												const baseline = metric.baseline(row);
+												return (
+													<td
+														key={metric.key}
+														style={{ ...td, ...numeric, ...heatStyle(value, baseline, metric.span) }}
+														title={heatTitle(metric.label, value, baseline, metric.unit, metric.digits)}
+													>
+														{formatNumber(value, metric.digits)}
+													</td>
+												);
+											})}
+											<td style={{ ...td, ...numeric }}>{formatPct(row.whiffPct)}</td>
+											<td style={{ ...td, ...numeric }}>{formatPct(row.chasePct)}</td>
+											<td style={{ ...td, ...numeric }}>{formatPct(row.putawayPct)}</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					)}
 				</div>
 			)}
 		</Panel>

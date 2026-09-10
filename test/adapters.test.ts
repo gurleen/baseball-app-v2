@@ -8,6 +8,7 @@ import {
 	formatMissBy,
 	formatMissDirection,
 	formatZoneBounds,
+	gamePitchers,
 	meanZoneBounds,
 	missDirection,
 	periodLabel,
@@ -323,5 +324,40 @@ describe('ABS miss-by helpers', () => {
 		expect(absCallLabel('C', 'Called Strike', false)).toBe('Called Strike');
 		expect(absCallLabel('C', 'Called Strike', true)).toBe('Called Ball');
 		expect(absCallLabel('B', 'Ball', true)).toBe('Called Strike');
+	});
+});
+
+describe('gamePitchers', () => {
+	for (const side of ['home', 'away'] as const) {
+		test(`${side}: starter is first and everyone else follows without duplicates`, () => {
+			const pitchers = gamePitchers(snapshot, side);
+			const box = snapshot.boxscore[side];
+
+			expect(pitchers[0]!.id).toBe(snapshot.probablePitchers[side]!);
+			expect(pitchers[0]!.starter).toBe(true);
+			expect(pitchers.filter((pitcher) => pitcher.starter)).toHaveLength(1);
+			expect(new Set(pitchers.map((pitcher) => pitcher.id)).size).toBe(pitchers.length);
+			expect(pitchers.every((pitcher) => pitcher.name.length > 0)).toBe(true);
+
+			// Appeared relievers and the remaining bullpen are both selectable.
+			for (const line of [...box.pitching.slice(1), ...box.bullpen]) {
+				expect(pitchers.some((pitcher) => pitcher.id === line.playerId)).toBe(true);
+			}
+		});
+	}
+
+	test('falls back to the announced starter when the boxscore has no pitchers yet', () => {
+		const preview = {
+			...snapshot,
+			boxscore: {
+				home: { ...snapshot.boxscore.home, pitching: [], bullpen: [] },
+				away: { ...snapshot.boxscore.away, pitching: [], bullpen: [] }
+			}
+		};
+
+		const pitchers = gamePitchers(preview, 'away');
+		expect(pitchers).toHaveLength(1);
+		expect(pitchers[0]!.id).toBe(snapshot.probablePitchers.away!);
+		expect(pitchers[0]!.starter).toBe(true);
 	});
 });

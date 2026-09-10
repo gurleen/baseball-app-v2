@@ -347,6 +347,51 @@ export function probablePitcherLine(
 	return snapshot.boxscore[side].pitching[0];
 }
 
+export interface GamePitcherOption {
+	id: number;
+	name: string;
+	starter: boolean;
+}
+
+/**
+ * Every pitcher who could throw for a side: the announced/probable starter,
+ * the relievers who have already appeared, and the remaining bullpen. The
+ * starter is first, so callers can use it as the default selection. A pitcher
+ * who has entered the game leaves `boxscore.bullpen` for `boxscore.pitching`,
+ * so both are included to keep the list stable as the game progresses.
+ */
+export function gamePitchers(
+	snapshot: GameSnapshot,
+	side: 'home' | 'away'
+): GamePitcherOption[] {
+	const box = snapshot.boxscore[side];
+	const byId = new Map<number, PitchingLine>();
+	for (const line of [...box.pitching, ...box.bullpen]) byId.set(line.playerId, line);
+
+	const starterId =
+		snapshot.probablePitchers[side] ??
+		box.pitching.find((line) => line.starter)?.playerId ??
+		box.pitching[0]?.playerId ??
+		null;
+
+	const options: GamePitcherOption[] = [];
+	const seen = new Set<number>();
+	const add = (id: number, name: string, starter: boolean) => {
+		if (seen.has(id)) return;
+		seen.add(id);
+		options.push({ id, name, starter });
+	};
+
+	if (starterId !== null) {
+		const line = byId.get(starterId);
+		add(starterId, line?.name ?? snapshot.players[starterId]?.fullName ?? `#${starterId}`, true);
+	}
+	for (const line of box.pitching) add(line.playerId, line.name, line.playerId === starterId);
+	for (const line of box.bullpen) add(line.playerId, line.name, false);
+
+	return options;
+}
+
 function linesById(box: TeamBox): Map<number, BattingLine> {
 	return new Map([...box.batting, ...box.bench].map((line) => [line.playerId, line]));
 }
