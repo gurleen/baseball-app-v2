@@ -49,6 +49,11 @@ export function BoxScoreTab({
 									totals={totals}
 									totalsLabel={preset === 'batting' ? 'TOTALS' : 'STAFF'}
 									dense
+									// Without a definite width wider than its columns, the grid
+									// overflows its own background and the revealed strip renders
+									// blank. Pin the floor past the fixed stat columns (274px
+									// batting / 308px pitching) plus a readable name column.
+									style={{ minWidth: preset === 'batting' ? 480 : 520 }}
 								/>
 							</div>
 						</Panel>
