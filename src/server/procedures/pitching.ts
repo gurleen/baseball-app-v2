@@ -3,7 +3,14 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '../db/client.ts';
-import { clubsHistory, people, pitchingStatsSeason, plays, statcastPitchArsenal } from '../db/schema.ts';
+import {
+	clubsHistory,
+	people,
+	pitchingStatsSeason,
+	plays,
+	statcastLeaguePitchAverages,
+	statcastPitchArsenal
+} from '../db/schema.ts';
 import { listClubs, type ClubOption } from '../stats/clubs.ts';
 import { pitchingSplits, type PitchingSplitRow } from '../stats/pitching-splits.ts';
 import { SplitFilters } from '../stats/split-filters.ts';
@@ -17,6 +24,15 @@ const ArsenalInput = z.object({
 	pitcherPk: z.number().int(),
 	season: z.number().int()
 });
+
+export interface LeaguePitchAverage {
+	pitches: number;
+	avgVelocity: number | null;
+	avgSpinRate: number | null;
+	avgHorizontalBreak: number | null;
+	avgInducedVerticalBreak: number | null;
+	avgExtension: number | null;
+}
 
 export interface PitchArsenalRow {
 	pitchType: string | null;
@@ -33,6 +49,8 @@ export interface PitchArsenalRow {
 	chasePct: number | null;
 	zonePct: number | null;
 	putawayPct: number | null;
+	/** League-average baseline for the same pitch type and season, when available. */
+	league: LeaguePitchAverage | null;
 }
 
 export interface PitchingLeader {
@@ -249,47 +267,81 @@ export const pitchingRouter = {
 
 	/** Statcast pitch arsenal for one pitcher/season, most-thrown pitch first. */
 	arsenal: os.input(ArsenalInput).handler(async ({ input }): Promise<PitchArsenalRow[]> => {
-		const rows = await db
-			.select({
-				pitchType: statcastPitchArsenal.pitchType,
-				pitchName: statcastPitchArsenal.pitchName,
-				pitches: statcastPitchArsenal.pitches,
-				usagePct: statcastPitchArsenal.usagePct,
-				avgVelocity: statcastPitchArsenal.avgVelocity,
-				maxVelocity: statcastPitchArsenal.maxVelocity,
-				avgSpinRate: statcastPitchArsenal.avgSpinRate,
-				avgExtension: statcastPitchArsenal.avgExtension,
-				avgHorizontalBreak: statcastPitchArsenal.avgHorizontalBreak,
-				avgInducedVerticalBreak: statcastPitchArsenal.avgInducedVerticalBreak,
-				whiffPct: statcastPitchArsenal.whiffPct,
-				chasePct: statcastPitchArsenal.chasePct,
-				zonePct: statcastPitchArsenal.zonePct,
-				putawayPct: statcastPitchArsenal.putawayPct
-			})
-			.from(statcastPitchArsenal)
-			.where(
-				and(
-					eq(statcastPitchArsenal.pitcherPk, input.pitcherPk),
-					eq(statcastPitchArsenal.season, input.season)
+		// The arsenal and the league baselines differ only by (season, pitch_type),
+		// so fetch both and merge in JS rather than joining two views that share
+		// column names (`season`, `pitches`, `avg_*`). The league view is tiny
+		// (~17 rows/season); the lookup is exact by pitch type.
+		const [rows, leagueRows] = await Promise.all([
+			db
+				.select({
+					pitchType: statcastPitchArsenal.pitchType,
+					pitchName: statcastPitchArsenal.pitchName,
+					pitches: statcastPitchArsenal.pitches,
+					usagePct: statcastPitchArsenal.usagePct,
+					avgVelocity: statcastPitchArsenal.avgVelocity,
+					maxVelocity: statcastPitchArsenal.maxVelocity,
+					avgSpinRate: statcastPitchArsenal.avgSpinRate,
+					avgExtension: statcastPitchArsenal.avgExtension,
+					avgHorizontalBreak: statcastPitchArsenal.avgHorizontalBreak,
+					avgInducedVerticalBreak: statcastPitchArsenal.avgInducedVerticalBreak,
+					whiffPct: statcastPitchArsenal.whiffPct,
+					chasePct: statcastPitchArsenal.chasePct,
+					zonePct: statcastPitchArsenal.zonePct,
+					putawayPct: statcastPitchArsenal.putawayPct
+				})
+				.from(statcastPitchArsenal)
+				.where(
+					and(
+						eq(statcastPitchArsenal.pitcherPk, input.pitcherPk),
+						eq(statcastPitchArsenal.season, input.season)
+					)
 				)
-			)
-			.orderBy(desc(statcastPitchArsenal.pitches));
+				.orderBy(desc(statcastPitchArsenal.pitches)),
+			db
+				.select({
+					pitchType: statcastLeaguePitchAverages.pitchType,
+					pitches: statcastLeaguePitchAverages.pitches,
+					avgVelocity: statcastLeaguePitchAverages.avgVelocity,
+					avgSpinRate: statcastLeaguePitchAverages.avgSpinRate,
+					avgHorizontalBreak: statcastLeaguePitchAverages.avgHorizontalBreak,
+					avgInducedVerticalBreak: statcastLeaguePitchAverages.avgInducedVerticalBreak,
+					avgExtension: statcastLeaguePitchAverages.avgExtension
+				})
+				.from(statcastLeaguePitchAverages)
+				.where(eq(statcastLeaguePitchAverages.season, input.season))
+		]);
 
-		return rows.map((row) => ({
-			pitchType: row.pitchType,
-			pitchName: row.pitchName,
-			pitches: row.pitches ?? 0,
-			usagePct: toNumber(row.usagePct),
-			avgVelocity: row.avgVelocity,
-			maxVelocity: row.maxVelocity,
-			avgSpinRate: toNumber(row.avgSpinRate),
-			avgExtension: row.avgExtension,
-			avgHorizontalBreak: row.avgHorizontalBreak,
-			avgInducedVerticalBreak: row.avgInducedVerticalBreak,
-			whiffPct: toNumber(row.whiffPct),
-			chasePct: toNumber(row.chasePct),
-			zonePct: toNumber(row.zonePct),
-			putawayPct: toNumber(row.putawayPct)
-		}));
+		const leagueByPitchType = new Map(leagueRows.map((row) => [row.pitchType, row]));
+
+		return rows.map((row) => {
+			const league = row.pitchType ? leagueByPitchType.get(row.pitchType) : undefined;
+
+			return {
+				pitchType: row.pitchType,
+				pitchName: row.pitchName,
+				pitches: row.pitches ?? 0,
+				usagePct: toNumber(row.usagePct),
+				avgVelocity: row.avgVelocity,
+				maxVelocity: row.maxVelocity,
+				avgSpinRate: toNumber(row.avgSpinRate),
+				avgExtension: row.avgExtension,
+				avgHorizontalBreak: row.avgHorizontalBreak,
+				avgInducedVerticalBreak: row.avgInducedVerticalBreak,
+				whiffPct: toNumber(row.whiffPct),
+				chasePct: toNumber(row.chasePct),
+				zonePct: toNumber(row.zonePct),
+				putawayPct: toNumber(row.putawayPct),
+				league: league
+					? {
+							pitches: league.pitches ?? 0,
+							avgVelocity: league.avgVelocity,
+							avgSpinRate: toNumber(league.avgSpinRate),
+							avgHorizontalBreak: league.avgHorizontalBreak,
+							avgInducedVerticalBreak: league.avgInducedVerticalBreak,
+							avgExtension: league.avgExtension
+						}
+					: null
+			};
+		});
 	})
 };
