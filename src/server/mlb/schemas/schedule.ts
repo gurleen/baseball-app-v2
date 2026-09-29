@@ -118,7 +118,7 @@ export const ScheduleTeamSummary = z
 		locationName: z.string(),
 		firstYearOfPlay: z.string(),
 		league: NamedEntityRef,
-		division: NamedEntityRef,
+		division: NamedEntityRef.optional(),
 		sport: NamedEntityRef,
 		shortName: z.string(),
 		franchiseName: z.string().optional(),
@@ -167,6 +167,9 @@ export const ScheduleInningLine = z
 	.passthrough();
 export type ScheduleInningLine = z.infer<typeof ScheduleInningLine>;
 
+/** Undecided postseason slots come back without a team name. */
+const ScheduleLinescoreTeam = TeamRef.partial({ name: true });
+
 export const ScheduleLinescoreDefense = z
 	.object({
 		pitcher: ScheduleProbablePitcher.optional(),
@@ -182,7 +185,7 @@ export const ScheduleLinescoreDefense = z
 		onDeck: ScheduleDefensePlayer.optional(),
 		inHole: ScheduleDefensePlayer.optional(),
 		battingOrder: z.number().optional(),
-		team: TeamRef.optional()
+		team: ScheduleLinescoreTeam.optional()
 	})
 	.passthrough();
 export type ScheduleLinescoreDefense = z.infer<typeof ScheduleLinescoreDefense>;
@@ -197,7 +200,7 @@ export const ScheduleLinescoreOffense = z
 		third: ScheduleOffensePlayer.optional(),
 		pitcher: ScheduleProbablePitcher.optional(),
 		battingOrder: z.number().optional(),
-		team: TeamRef.optional()
+		team: ScheduleLinescoreTeam.optional()
 	})
 	.passthrough();
 export type ScheduleLinescoreOffense = z.infer<typeof ScheduleLinescoreOffense>;
@@ -234,7 +237,7 @@ export const ScheduleVenueLocation = z
 		state: z.string().optional(),
 		stateAbbrev: z.string().optional(),
 		postalCode: z.string().optional(),
-		defaultCoordinates: VenueCoordinates,
+		defaultCoordinates: VenueCoordinates.optional(),
 		azimuthAngle: z.number().optional(),
 		elevation: z.number().optional(),
 		country: z.string().optional(),
@@ -326,7 +329,7 @@ export const ScheduleBroadcast = z
 		mediaId: z.string().optional(),
 		colorSpace: ScheduleColorSpace.optional(),
 		gameDateBroadcastGuid: z.string().optional(),
-		homeAway: z.string(),
+		homeAway: z.string().optional(),
 		freeGame: z.boolean(),
 		availableForStreaming: z.boolean(),
 		preGameShow: z.string().optional(),
