@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from "./routes/index"
 import { Route as BattingRouteImport } from "./routes/batting"
 import { Route as CustomQueryRouteImport } from "./routes/custom-query"
 import { Route as PitchingRouteImport } from "./routes/pitching"
+import { Route as BullpenIndexRouteImport } from "./routes/bullpen.index"
+import { Route as BullpenClubRouteImport } from "./routes/bullpen.$club"
 import { Route as GameGamePkRouteImport } from "./routes/game.$gamePk"
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +37,16 @@ const PitchingRoute = PitchingRouteImport.update({
   path: "/pitching",
   getParentRoute: () => rootRouteImport,
 } as any)
+const BullpenIndexRoute = BullpenIndexRouteImport.update({
+  id: "/bullpen/",
+  path: "/bullpen/",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BullpenClubRoute = BullpenClubRouteImport.update({
+  id: "/bullpen/$club",
+  path: "/bullpen/$club",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GameGamePkRoute = GameGamePkRouteImport.update({
   id: "/game/$gamePk",
   path: "/game/$gamePk",
@@ -46,14 +58,18 @@ export interface FileRoutesByFullPath {
   "/batting": typeof BattingRoute
   "/custom-query": typeof CustomQueryRoute
   "/pitching": typeof PitchingRoute
+  "/bullpen/$club": typeof BullpenClubRoute
   "/game/$gamePk": typeof GameGamePkRoute
+  "/bullpen/": typeof BullpenIndexRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/batting": typeof BattingRoute
   "/custom-query": typeof CustomQueryRoute
   "/pitching": typeof PitchingRoute
+  "/bullpen/$club": typeof BullpenClubRoute
   "/game/$gamePk": typeof GameGamePkRoute
+  "/bullpen": typeof BullpenIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,20 +77,38 @@ export interface FileRoutesById {
   "/batting": typeof BattingRoute
   "/custom-query": typeof CustomQueryRoute
   "/pitching": typeof PitchingRoute
+  "/bullpen/$club": typeof BullpenClubRoute
   "/game/$gamePk": typeof GameGamePkRoute
+  "/bullpen/": typeof BullpenIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/batting" | "/custom-query" | "/pitching" | "/game/$gamePk"
+  fullPaths:
+    | "/"
+    | "/batting"
+    | "/custom-query"
+    | "/pitching"
+    | "/bullpen/$club"
+    | "/game/$gamePk"
+    | "/bullpen/"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/batting" | "/custom-query" | "/pitching" | "/game/$gamePk"
+  to:
+    | "/"
+    | "/batting"
+    | "/custom-query"
+    | "/pitching"
+    | "/bullpen/$club"
+    | "/game/$gamePk"
+    | "/bullpen"
   id:
     | "__root__"
     | "/"
     | "/batting"
     | "/custom-query"
     | "/pitching"
+    | "/bullpen/$club"
     | "/game/$gamePk"
+    | "/bullpen/"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -82,7 +116,9 @@ export interface RootRouteChildren {
   BattingRoute: typeof BattingRoute
   CustomQueryRoute: typeof CustomQueryRoute
   PitchingRoute: typeof PitchingRoute
+  BullpenClubRoute: typeof BullpenClubRoute
   GameGamePkRoute: typeof GameGamePkRoute
+  BullpenIndexRoute: typeof BullpenIndexRoute
 }
 
 declare module "@tanstack/react-router" {
@@ -115,6 +151,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof PitchingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/bullpen/": {
+      id: "/bullpen/"
+      path: "/bullpen"
+      fullPath: "/bullpen/"
+      preLoaderRoute: typeof BullpenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/bullpen/$club": {
+      id: "/bullpen/$club"
+      path: "/bullpen/$club"
+      fullPath: "/bullpen/$club"
+      preLoaderRoute: typeof BullpenClubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/game/$gamePk": {
       id: "/game/$gamePk"
       path: "/game/$gamePk"
@@ -130,7 +180,9 @@ const rootRouteChildren: RootRouteChildren = {
   BattingRoute: BattingRoute,
   CustomQueryRoute: CustomQueryRoute,
   PitchingRoute: PitchingRoute,
+  BullpenClubRoute: BullpenClubRoute,
   GameGamePkRoute: GameGamePkRoute,
+  BullpenIndexRoute: BullpenIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
