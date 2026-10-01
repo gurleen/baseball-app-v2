@@ -1,4 +1,5 @@
 import { battingRouter } from './procedures/batting.ts';
+import { bullpenRouter } from './procedures/bullpen.ts';
 import { customQueryRouter } from './procedures/custom-query.ts';
 import { gameRouter } from './procedures/game.ts';
 import { pitchingRouter } from './procedures/pitching.ts';
@@ -7,6 +8,7 @@ import { systemRouter } from './procedures/system.ts';
 
 export const router = {
 	batting: battingRouter,
+	bullpen: bullpenRouter,
 	customQuery: customQueryRouter,
 	game: gameRouter,
 	pitching: pitchingRouter,
