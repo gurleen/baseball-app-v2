@@ -1,19 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { Combobox, Panel, Spinner } from '@hydra-tv/ui';
+import { Button, Panel, SideNav, Spinner } from '@hydra-tv/ui';
 import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
 	getSortedRowModel,
 	useReactTable,
+	type Column,
 	type ColumnDef,
+	type Header,
 	type SortingState
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 
+import { TeamLogo } from '../components/TeamLogo.tsx';
+import { Tooltip } from '../components/Tooltip.tsx';
 import { orpc } from '../rpc/client.ts';
-import type { BullpenPitcher } from '../../server/procedures/bullpen.ts';
+import type { BullpenClub, BullpenPitcher } from '../../server/procedures/bullpen.ts';
 import { fullWidthColumn, scrollX, shrinkable } from '../lib/layout.ts';
 import { muted, numeric, stripedRow, table, td, th } from '../lib/table.ts';
 
@@ -145,7 +149,61 @@ const starterColumns = [
 	numberColumn('seasonReliefAppearances', 'RELIEF G')
 ] as ColumnDef<BullpenPitcher, unknown>[];
 
-const leftAlignedColumns = new Set(['name']);
+// Numbers and dates right-align so their digits line up; text keeps its own alignment.
+function columnAlignment(id: string): 'left' | 'center' | 'right' {
+	if (id === 'name') return 'left';
+	if (id === 'throws') return 'center';
+	return 'right';
+}
+
+// Tooltip text for each header, keyed by column or group id.
+const columnDescriptions: Record<string, string> = {
+	workload: 'Workload counts every game type.',
+	outing: 'Regular-season relief outings only.',
+	role: 'Regular-season relief outings only.',
+	performance: 'Regular-season relief outings only.',
+	jerseyNumber: 'Jersey number',
+	throws: 'Throwing hand',
+	daysSinceLastAppearance: 'Days since last appearance',
+	consecutiveDaysPitched: 'Consecutive days pitched through yesterday',
+	lastAppearanceDate: 'Date of last appearance',
+	lastAppearancePitches: 'Pitches thrown in last appearance',
+	lastAppearanceOuts: 'Innings pitched in last appearance',
+	pitchesLast1Days: 'Pitches over the previous day plus today',
+	pitchesLast3Days: 'Pitches over the previous 3 days plus today',
+	pitchesLast7Days: 'Pitches over the previous 7 days plus today',
+	appearancesLast7Days: 'Appearances over the previous 7 days plus today',
+	reliefAppearances: 'Relief appearances',
+	reliefIp: 'Innings pitched in relief',
+	outsPerAppearance: 'Outs recorded per appearance',
+	pitchesPerAppearance: 'Pitches per appearance',
+	multiInningPct: 'Share of outings longer than three outs',
+	avgEntryInning: 'Average inning of entry',
+	avgEntryLeverageIndex: 'Average leverage index when entering',
+	saveSituationAppearances: 'Appearances in a save situation',
+	gamesFinished: 'Games finished',
+	era: 'Earned run average',
+	fip: 'Fielding independent pitching',
+	whip: 'Walks plus hits per inning pitched',
+	kPct: 'Strikeout rate',
+	bbPct: 'Walk rate',
+	inheritedRunnersScoredPct: 'Share of inherited runners who scored',
+	seasonStarts: 'Games started this season',
+	seasonReliefAppearances: 'Relief appearances this season'
+};
+
+function headerContent(header: Header<BullpenPitcher, unknown>) {
+	const label = flexRender(header.column.columnDef.header, header.getContext());
+	const description = columnDescriptions[header.column.id];
+	return description === undefined ? label : <Tooltip content={description}>{label}</Tooltip>;
+}
+
+// A faint line between columns and a stronger one where a column group begins.
+function columnDivider(column: Column<BullpenPitcher, unknown>, index: number): CSSProperties {
+	if (index === 0) return {};
+	const startsGroup = column.parent?.columns[0]?.id === column.id;
+	return { borderLeft: `1px solid var(${startsGroup ? '--line-3' : '--line-2'})` };
+}
 
 function PitcherTable({
 	rows,
@@ -174,7 +232,7 @@ function PitcherTable({
 						const isLeafRow = depth === groups.length - 1;
 						return (
 							<tr key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
+								{headerGroup.headers.map((header, index) => {
 									if (!isLeafRow) {
 										return (
 											<th
@@ -183,23 +241,30 @@ function PitcherTable({
 												style={{
 													...th,
 													...numeric,
-													borderLeft: header.isPlaceholder ? undefined : '1px solid var(--line-2)'
+													borderLeft:
+														header.isPlaceholder || index === 0 ? undefined : '1px solid var(--line-3)'
 												}}
 											>
-												{header.isPlaceholder
-													? null
-													: flexRender(header.column.columnDef.header, header.getContext())}
+												{header.isPlaceholder ? null : headerContent(header)}
 											</th>
 										);
 									}
 									const sort = header.column.getIsSorted();
+									const alignment = columnAlignment(header.column.id);
+									// Keep the arrow off the aligned edge so labels stay flush with their values.
+									const sortIndicator = (
+										<span style={{ display: 'inline-block', width: '1em', color: 'var(--fg-3)' }}>
+											{sort === 'asc' ? '▲' : sort === 'desc' ? '▼' : ''}
+										</span>
+									);
 									return (
 										<th
 											key={header.id}
 											style={{
 												...th,
 												...numeric,
-												textAlign: leftAlignedColumns.has(header.column.id) ? 'left' : 'center',
+												...columnDivider(header.column, index),
+												textAlign: alignment,
 												cursor: 'pointer',
 												userSelect: 'none'
 											}}
@@ -208,10 +273,9 @@ function PitcherTable({
 											}
 											onClick={header.column.getToggleSortingHandler()}
 										>
-											{flexRender(header.column.columnDef.header, header.getContext())}
-											<span style={{ display: 'inline-block', width: '1em', color: 'var(--fg-3)' }}>
-												{sort === 'asc' ? '▲' : sort === 'desc' ? '▼' : ''}
-											</span>
+											{alignment === 'right' ? sortIndicator : null}
+											{headerContent(header)}
+											{alignment === 'right' ? null : sortIndicator}
 										</th>
 									);
 								})}
@@ -222,13 +286,14 @@ function PitcherTable({
 				<tbody>
 					{tableInstance.getRowModel().rows.map((row, index) => (
 						<tr key={row.id} style={stripedRow(index)}>
-							{row.getVisibleCells().map((cell) => (
+							{row.getVisibleCells().map((cell, index) => (
 								<td
 									key={cell.id}
 									style={{
 										...td,
 										...numeric,
-										textAlign: leftAlignedColumns.has(cell.column.id) ? 'left' : 'center',
+										...columnDivider(cell.column, index),
+										textAlign: columnAlignment(cell.column.id),
 										whiteSpace: 'nowrap'
 									}}
 								>
@@ -243,9 +308,74 @@ function PitcherTable({
 	);
 }
 
+const SIDEBAR_WIDTH = 240;
+
+/**
+ * Club list. A sticky column beside the tables on large screens; below `lg` it
+ * is an off-canvas drawer that slides in from the left over a backdrop.
+ */
+function ClubSidebar({
+	clubs,
+	active,
+	open,
+	onSelect,
+	onClose
+}: {
+	clubs: BullpenClub[];
+	active: string | undefined;
+	open: boolean;
+	onSelect: (abbreviation: string) => void;
+	onClose: () => void;
+}) {
+	useEffect(() => {
+		if (!open) return;
+		const closeOnEscape = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') onClose();
+		};
+		window.addEventListener('keydown', closeOnEscape);
+		return () => window.removeEventListener('keydown', closeOnEscape);
+	}, [open, onClose]);
+
+	const items = clubs
+		.toSorted((a, b) => a.name.localeCompare(b.name))
+		.map((club) => ({
+			key: club.abbreviation,
+			label: club.name,
+			icon: <TeamLogo teamId={club.clubPk} width={20} />
+		}));
+
+	return (
+		<>
+			{open ? (
+				<div
+					className="fixed inset-0 z-[199] lg:hidden"
+					style={{ background: 'rgb(0 0 0 / 0.5)' }}
+					onClick={onClose}
+				/>
+			) : null}
+			<aside
+				aria-label="Clubs"
+				className={`fixed inset-y-0 left-0 z-[200] transition-[transform,visibility] duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen ${
+					open ? '' : 'max-lg:invisible max-lg:-translate-x-full'
+				}`}
+				style={{
+					width: SIDEBAR_WIDTH,
+					overflowY: 'auto',
+					padding: 'var(--sp-2)',
+					background: 'var(--bg-2)',
+					borderRight: '1px solid var(--line-2)'
+				}}
+			>
+				<SideNav items={items} active={active} onChange={onSelect} style={{ width: '100%' }} />
+			</aside>
+		</>
+	);
+}
+
 function BullpenPage() {
 	const { club } = Route.useParams();
 	const navigate = Route.useNavigate();
+	const [pickerOpen, setPickerOpen] = useState(false);
 
 	const clubsQuery = useQuery(orpc.bullpen.clubs.queryOptions({ input: {} }));
 	const selected = clubsQuery.data?.find(
@@ -262,11 +392,6 @@ function BullpenPage() {
 	const pitchers = bullpenQuery.data?.pitchers ?? [];
 	const relievers = pitchers.filter((pitcher) => pitcher.role === 'reliever');
 	const starters = pitchers.filter((pitcher) => pitcher.role === 'starter');
-
-	const clubOptions = (clubsQuery.data ?? []).map((option) => ({
-		value: option.abbreviation,
-		label: `${option.abbreviation} · ${option.name}`
-	}));
 
 	const dates = bullpenQuery.data
 		? `AS OF ${fmtShortDate(bullpenQuery.data.asOfDate)} · ROSTER ${fmtShortDate(bullpenQuery.data.rosterDate)}`
@@ -307,39 +432,53 @@ function BullpenPage() {
 						initialSorting={[{ id: 'daysSinceLastAppearance', desc: true }]}
 					/>
 				</Panel>
-				<p style={{ ...muted, margin: 0 }}>
-					REST = days since last appearance. STREAK = consecutive days pitched through yesterday.
-					P 1D/3D/7D = pitches over the previous 1/3/7 days plus today; workload counts every
-					game type. TYPICAL OUTING, ROLE, and PERFORMANCE cover regular-season relief outings
-					only. MULTI% = outings longer than three outs. ENTRY LI = leverage index when entering.
-				</p>
 			</>
 		);
 	}
 
 	return (
-		<div style={{ ...fullWidthColumn, padding: 'var(--sp-4)', gap: 'var(--sp-4)' }}>
+		// Tailwind only sees literal class names, so the 240px here must match SIDEBAR_WIDTH.
+		<div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+			<ClubSidebar
+				clubs={clubsQuery.data ?? []}
+				active={selected?.abbreviation}
+				open={pickerOpen}
+				onSelect={(value) => {
+					setPickerOpen(false);
+					navigate({ to: '/bullpen/$club', params: { club: value } });
+				}}
+				onClose={() => setPickerOpen(false)}
+			/>
 			<div
 				style={{
-					display: 'flex',
-					flexWrap: 'wrap',
-					alignItems: 'end',
+					...fullWidthColumn,
+					// The sidebar makes this row viewport-tall; keep the content packed at the top.
+					alignContent: 'start',
+					padding: 'var(--sp-4)',
 					gap: 'var(--sp-4)'
 				}}
 			>
-				<div style={{ width: 280, maxWidth: '100%' }}>
-					<Combobox
-						label="CLUB"
-						value={selected?.abbreviation}
-						options={clubOptions}
-						onChange={(value) =>
-							navigate({ to: '/bullpen/$club', params: { club: value } })
-						}
-					/>
+				<div
+					style={{
+						display: 'flex',
+						flexWrap: 'wrap',
+						alignItems: 'center',
+						gap: 'var(--sp-3)'
+					}}
+				>
+					<span className="lg:hidden">
+						<Button label="☰ CLUBS" onClick={() => setPickerOpen(true)} />
+					</span>
+					{selected ? (
+						<span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+							<TeamLogo teamId={selected.clubPk} width={28} />
+							<span style={{ fontSize: 'var(--fs-16)', fontWeight: 600 }}>{selected.name}</span>
+						</span>
+					) : null}
+					{dates ? <span style={muted}>{dates}</span> : null}
 				</div>
-				{dates ? <span style={muted}>{dates}</span> : null}
+				{body}
 			</div>
-			{body}
 		</div>
 	);
 }
